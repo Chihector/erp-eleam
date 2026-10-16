@@ -119,4 +119,46 @@ class RemuneracionServiceTest extends TestCase
         // Plazo fijo -> 0% cesantía para el trabajador
         $this->assertEquals(0, $liquidacion->monto_cesantia);
     }
+
+    public function test_calcula_la_gratificacion_con_toppe()
+    {
+        $trabajador = Trabajador::create([
+            'rut' => '12345678-9',
+            'nombres' => 'Juan',
+            'apellidos' => 'Perez',
+            'cargo' => 'Enfermero',
+            'afp' => 'Modelo',
+            'sistema_salud' => 'Fonasa',
+            'fecha_ingreso' => '2025-01-01'
+        ]);
+        $contrato = Contrato::create([
+            'trabajador_id' => $trabajador->id,
+            'sueldo_base' => 10000000,
+            'tipo_contrato' => 'Indefinido',
+            'horas_semanales' => 45,
+            'fecha_inicio' => '2025-01-01'
+        ]);
+
+        ParametroLegal::create([
+            'mes' => 10,
+            'anio' => 2026,
+            'valor_uf' => 37000.50,
+            'valor_utm' => 66000,
+            'sueldo_minimo' => 500000,
+            'tope_imponible_afp' => 84.3,
+            'tope_imponible_ips' => 60.0,
+            'tope_imponible_cesantia' => 126.6,
+        ]);
+
+        // El tope de gratificación es de (4.75 * sueldo mínimo) / 12.
+        $topeGratificacion = (4.75 * 500000) / 12;
+        $this->assertEquals((int) round($topeGratificacion), 197917);
+
+        $service = new RemuneracionService();
+        $liquidacion = $service->calcularLiquidacion($trabajador, 10, 2026, 30);
+
+        // La gratificación se capura aunque el sueldo base sea mucho mayor.
+        $this->assertEquals(197917, $liquidacion->gratificacion);
+        $this->assertEquals(10197917, $liquidacion->total_imponible);
+    }
 }

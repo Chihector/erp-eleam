@@ -126,7 +126,7 @@ Permite llevar el control del flujo de efectivo del establecimiento.
 2. Registra mensualidades de residentes, donaciones o subsidios recibidos.
 
 ### C. Estadísticas en el Dashboard
-- En el Dashboard verás widgets en tiempo real con:
+- En el Dashboard verás widgets en tiempo real (con una pequeña demora por la caché de estadísticas, que se actualiza cada 60 segundos) con:
   - **Dinero Disponible (Caja real):** Total Ingresos - Total Gastos.
   - **Ingresos del Mes en curso.**
   - **Gastos del Mes en curso.**

@@ -35,4 +35,39 @@ class GastoTest extends TestCase
             'fecha' => '2026-10-10',
         ]);
     }
+
+    public function test_can_update_a_gasto()
+    {
+        $gasto = Gasto::create([
+            'fecha' => '2026-10-10',
+            'categoria' => 'Luz',
+            'monto' => 50000,
+            'descripcion' => 'Boleta de luz de octubre'
+        ]);
+
+        $gasto->update([
+            'monto' => 60000,
+            'descripcion' => 'Boleta de luz corregida'
+        ]);
+
+        $this->assertDatabaseHas('gastos', [
+            'id' => $gasto->id,
+            'monto' => 60000,
+            'descripcion' => 'Boleta de luz corregida'
+        ]);
+    }
+
+    public function test_can_delete_a_gasto()
+    {
+        $gasto = Gasto::create([
+            'fecha' => '2026-10-10',
+            'categoria' => 'Luz',
+            'monto' => 50000,
+            'descripcion' => 'Boleta de luz de octubre'
+        ]);
+
+        $gasto->delete();
+
+        $this->assertDatabaseMissing('gastos', ['id' => $gasto->id]);
+    }
 }

@@ -120,6 +120,9 @@ php artisan test --filter=VacacionTest
 
 # Permisos y acceso al panel por rol
 php artisan test --filter=AutorizacionTest
+
+# Cálculo de totales de finanzas (servicio FinanzasService)
+php artisan test --filter=FinanzasServiceTest
 ```
 
 ---
