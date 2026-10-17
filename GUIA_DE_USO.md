@@ -2,6 +2,8 @@
 
 Esta guía explica paso a paso cómo utilizar cada uno de los módulos del **ERP ELEAM** para la administración del personal, control de turnos, asistencia, vacaciones y cálculo de liquidaciones de sueldo con formato PDF.
 
+La interfaz, la portada, los mensajes de validación y las funciones estándar del panel están configurados en español.
+
 ---
 
 ## 🔑 1. Acceso al Sistema
@@ -14,6 +16,7 @@ Esta guía explica paso a paso cómo utilizar cada uno de los módulos del **ERP
 2. **Ingresar desde el navegador:**
    - **En este PC:** **[http://localhost:8000/admin](http://localhost:8000/admin)**
    - **En tu teléfono celular (misma red Wi-Fi):** **`http://192.168.1.122:8000/admin`**
+   - La portada de `http://localhost:8000/` también está en español y ofrece un acceso directo al panel.
 3. **Inicio de sesión híbrido (Correo O RUT):**
    Puedes ingresar tanto con tu correo electrónico como con tu RUT chileno (con o sin puntos/guion).
 4. **Verificación de contraseña (botón del ojito):**
@@ -31,6 +34,13 @@ Esta guía explica paso a paso cómo utilizar cada uno de los módulos del **ERP
 | :--- | :--- | :--- | :--- | :--- |
 | **Héctor Contreras** | `hector@eleam.cl` | `19486694-1` | Jefe de Turno | `password` |
 | **Administrador General** | `admin@eleam.cl` | `11111111-1` | Administrador | `password` |
+
+> **Seguridad:** Las cuentas y contraseñas de ejemplo son solo para desarrollo local. Cámbialas antes de poner el sistema en una red compartida o en producción.
+
+### Idioma de la aplicación
+- La configuración inicial del proyecto establece `APP_LOCALE=es` y `APP_FALLBACK_LOCALE=es`.
+- Si ya tienes un archivo `.env`, asegúrate de que esos dos valores estén en `es`. Laravel lee la configuración del `.env` local.
+- Los mensajes de autenticación, validación y paginación tienen traducción al español.
 
 ---
 
@@ -222,4 +232,3 @@ Si en algún momento notas que el sistema tarda en cargar o deseas reiniciar la 
    ```bash
    php artisan test
    ```
-

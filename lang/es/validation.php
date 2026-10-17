@@ -1,0 +1,42 @@
+<?php
+
+return [
+    'accepted' => 'El campo :attribute debe aceptarse.',
+    'after' => 'El campo :attribute debe ser una fecha posterior a :date.',
+    'after_or_equal' => 'El campo :attribute debe ser una fecha igual o posterior a :date.',
+    'before' => 'El campo :attribute debe ser una fecha anterior a :date.',
+    'before_or_equal' => 'El campo :attribute debe ser una fecha igual o anterior a :date.',
+    'confirmed' => 'La confirmación del campo :attribute no coincide.',
+    'date' => 'El campo :attribute no es una fecha válida.',
+    'date_format' => 'El campo :attribute no coincide con el formato :format.',
+    'email' => 'El campo :attribute debe ser una dirección de correo válida.',
+    'exists' => 'El valor seleccionado para :attribute no es válido.',
+    'in' => 'El valor seleccionado para :attribute no es válido.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'max' => [
+        'numeric' => 'El campo :attribute no debe ser mayor que :max.',
+        'string' => 'El campo :attribute no debe tener más de :max caracteres.',
+        'file' => 'El archivo :attribute no debe pesar más de :max kilobytes.',
+        'array' => 'El campo :attribute no debe contener más de :max elementos.',
+    ],
+    'min' => [
+        'numeric' => 'El campo :attribute debe ser como mínimo :min.',
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+        'file' => 'El archivo :attribute debe pesar al menos :min kilobytes.',
+        'array' => 'El campo :attribute debe contener al menos :min elementos.',
+    ],
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'regex' => 'El formato del campo :attribute no es válido.',
+    'required' => 'El campo :attribute es obligatorio.',
+    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'unique' => 'El valor del campo :attribute ya está registrado.',
+    'attributes' => [
+        'email' => 'correo electrónico',
+        'fecha_fin' => 'fecha de término',
+        'fecha_inicio' => 'fecha de inicio',
+        'nombres' => 'nombres',
+        'password' => 'contraseña',
+        'rut' => 'RUT',
+    ],
+];

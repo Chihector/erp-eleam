@@ -76,6 +76,12 @@ Sistema integral de gestión de personal, planificación de turnos, control de a
 - [x] **Interfaz de inicio de sesión de alto contraste:** Botón principal *"Entrar al Sistema"* azul vibrante y botón del ojito estilizado para mostrar/ocultar contraseña táctilmente.
 - [x] **Acceso en red local Wi-Fi:** Configurado para conectarse desde cualquier teléfono o tablet conectada a la misma red local.
 
+### ✅ Etapa 8: Interfaz y validaciones en español
+- [x] Español (`es`) como idioma predeterminado y de respaldo; Faker usa la configuración regional `es_ES`.
+- [x] Traducciones en español para mensajes de autenticación, validaciones y paginación.
+- [x] Portada de bienvenida en español, con enlaces directos al panel de administración y al inicio de sesión.
+- [x] Pruebas de regresión para confirmar el idioma del inicio de sesión, la portada, el panel y los mensajes de validación.
+
 ---
 
 ## 💻 Puesta en Marcha Rápida
@@ -94,6 +100,11 @@ php artisan serve --host=0.0.0.0 --port=8000
 | :--- | :--- | :--- | :--- | :--- |
 | **Héctor Contreras** | `hector@eleam.cl` | `19486694-1` | Jefe de Turno | `password` |
 | **Administrador General** | `admin@eleam.cl` | `11111111-1` | Administrador | `password` |
+
+> **Importante:** Estas credenciales son únicamente para desarrollo local. Cámbialas antes de exponer el sistema a usuarios o redes no confiables; no uses estas contraseñas en producción.
+
+### Configuración regional
+La configuración inicial usa español de Chile para la interfaz (`APP_LOCALE=es`), español como idioma de respaldo (`APP_FALLBACK_LOCALE=es`) y español de España para los datos de prueba (`APP_FAKER_LOCALE=es_ES`). Al crear la configuración local, copia `.env.example` y genera una clave propia con `php artisan key:generate`.
 
 ---
 
@@ -121,9 +132,14 @@ php artisan test --filter=VacacionTest
 # Permisos y acceso al panel por rol
 php artisan test --filter=AutorizacionTest
 
+# Interfaz y validaciones en español
+php artisan test --filter=SpanishLocaleTest
+
 # Cálculo de totales de finanzas (servicio FinanzasService)
 php artisan test --filter=FinanzasServiceTest
 ```
+
+La suite completa se ejecuta con `php artisan test`. Última verificación: **34 pruebas aprobadas y 76 aserciones**.
 
 ---
 
