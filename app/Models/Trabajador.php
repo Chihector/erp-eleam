@@ -3,14 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Trabajador extends Model implements Auditable
 {
-    use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
+    use SoftDeletes;
 
     protected $table = 'trabajadores';
 
@@ -47,15 +46,25 @@ class Trabajador extends Model implements Auditable
         return $this->hasMany(Vacacion::class);
     }
 
+    public function licenciasMedicas()
+    {
+        return $this->hasMany(LicenciaMedica::class);
+    }
+
+    public function finiquitos()
+    {
+        return $this->hasMany(Finiquito::class);
+    }
+
     public function getSaldoVacacionesAttribute(): float
     {
-        if (!$this->fecha_ingreso) {
+        if (! $this->fecha_ingreso) {
             return 0;
         }
 
         // Calcula los meses trabajados desde la fecha de ingreso
         $mesesTrabajados = $this->fecha_ingreso->diffInMonths(now());
-        
+
         // En Chile se ganan 1.25 días hábiles por mes trabajado (15 días al año)
         $diasGanados = $mesesTrabajados * 1.25;
 

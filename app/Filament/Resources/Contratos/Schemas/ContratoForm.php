@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Contratos\Schemas;
 
-use Filament\Schemas\Schema;
-
-use Filament\Forms\Components\TextInput;
+use App\Filament\Support\SelectTrabajador;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class ContratoForm
 {
@@ -19,11 +19,7 @@ class ContratoForm
                 Section::make('Detalles del Contrato')
                     ->columns(['sm' => 1, 'md' => 2])
                     ->schema([
-                        Select::make('trabajador_id')
-                            ->label('Trabajador')
-                            ->relationship('trabajador', 'rut')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->rut} - {$record->nombres} {$record->apellidos}")
-                            ->searchable(['rut', 'nombres', 'apellidos'])
+                        SelectTrabajador::make()
                             ->required()
                             ->columnSpan('full'),
                         Select::make('tipo_contrato')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Liquidacions\Schemas;
 
+use App\Filament\Support\SelectTrabajador;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -17,18 +18,13 @@ class LiquidacionForm
                 Section::make('Datos del Trabajador y Período')
                     ->columns(['sm' => 1, 'md' => 3])
                     ->schema([
-                        Select::make('trabajador_id')
-                            ->label('Trabajador')
-                            ->relationship('trabajador', 'nombres')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->rut} - {$record->nombres} {$record->apellidos}")
-                            ->searchable()
-                            ->preload()
+                        SelectTrabajador::make()
                             ->required(),
 
                         Select::make('contrato_id')
                             ->label('Contrato Asignado')
                             ->relationship('contrato', 'id')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "Contrato #{$record->id} ($" . number_format($record->sueldo_base, 0, ',', '.') . ")")
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "Contrato #{$record->id} ($".number_format($record->sueldo_base, 0, ',', '.').')')
                             ->required(),
 
                         Select::make('mes')
@@ -200,4 +196,3 @@ class LiquidacionForm
             ]);
     }
 }
-

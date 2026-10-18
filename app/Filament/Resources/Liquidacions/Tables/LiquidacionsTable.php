@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Liquidacions\Tables;
 
 use App\Models\Liquidacion;
+use App\Support\Buscador;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -20,26 +21,26 @@ class LiquidacionsTable
                 TextColumn::make('trabajador.nombres')
                     ->label('Trabajador')
                     ->formatStateUsing(fn (Liquidacion $record) => "{$record->trabajador?->nombres} {$record->trabajador?->apellidos}")
-                    ->description(fn (Liquidacion $record) => 'RUT: ' . ($record->trabajador?->rut ?? '-'))
-                    ->searchable()
+                    ->description(fn (Liquidacion $record) => 'RUT: '.($record->trabajador?->rut ?? '-'))
+                    ->searchable(query: Buscador::relacion('trabajador', 'nombres', 'apellidos'))
                     ->sortable(),
 
                 TextColumn::make('trabajador.rut')
                     ->label('RUT')
-                    ->searchable()
+                    ->searchable(query: Buscador::relacion('trabajador', 'rut'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('periodo')
                     ->label('Período')
-                    ->state(fn (Liquidacion $record) => str_pad($record->mes, 2, '0', STR_PAD_LEFT) . '/' . $record->anio)
+                    ->state(fn (Liquidacion $record) => str_pad($record->mes, 2, '0', STR_PAD_LEFT).'/'.$record->anio)
                     ->badge()
                     ->color('info')
                     ->sortable(),
 
                 TextColumn::make('sueldo_liquido')
                     ->label('Líquido')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 0, ',', '.'))
                     ->weight('bold')
                     ->color('success')
                     ->sortable(),
@@ -52,19 +53,19 @@ class LiquidacionsTable
 
                 TextColumn::make('sueldo_base')
                     ->label('Sueldo Base')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 0, ',', '.'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('total_haberes')
                     ->label('Total Haberes')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 0, ',', '.'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('total_descuentos')
                     ->label('Total Descuentos')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 0, ',', '.'))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 0, ',', '.'))
                     ->color('danger')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -101,4 +102,3 @@ class LiquidacionsTable
             ]);
     }
 }
-

@@ -1,0 +1,51 @@
+# =============================================================================
+# ERP ELEAM — Archivos excluidos de la imagen Docker
+# =============================================================================
+
+.git
+.gitignore
+.github
+
+# Dependencias (se instalan dentro de la imagen)
+vendor
+node_modules
+
+# Compilados locales (se compilan dentro de la imagen)
+public/build
+public/hot
+
+# Entornos locales (en producción se usa env_file de docker-compose)
+.env
+.env.*
+!.env.production.example
+
+# Base de datos local SQLite (se monta por volumen solo para migrar)
+database/database.sqlite
+
+# Pruebas y herramientas de desarrollo
+tests
+phpunit.xml
+.editorconfig
+.pint.php
+composer.phar
+
+# Documentación
+*.md
+!README.md
+
+# Logs y cachés locales
+storage/logs/*
+storage/app/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*.php
+.phpunit.result.cache
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+.fleet
+.zed

@@ -2,16 +2,15 @@
 
 namespace App\Filament\Resources\Vacacions\Tables;
 
+use App\Support\Buscador;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 
 class VacacionsTable
 {
@@ -21,10 +20,10 @@ class VacacionsTable
             ->columns([
                 TextColumn::make('trabajador.nombres')
                     ->label('Nombres')
-                    ->searchable(),
+                    ->searchable(query: Buscador::relacion('trabajador', 'nombres')),
                 TextColumn::make('trabajador.apellidos')
                     ->label('Apellidos')
-                    ->searchable(),
+                    ->searchable(query: Buscador::relacion('trabajador', 'apellidos')),
                 TextColumn::make('fecha_inicio')
                     ->label('Desde')
                     ->date('d/m/Y'),

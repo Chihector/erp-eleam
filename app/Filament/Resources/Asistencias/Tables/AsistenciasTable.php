@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Asistencias\Tables;
 
+use App\Support\Buscador;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -17,7 +18,7 @@ class AsistenciasTable
                 TextColumn::make('trabajador.nombres')
                     ->label('Trabajador')
                     ->formatStateUsing(fn ($record) => "{$record->trabajador->nombres} {$record->trabajador->apellidos}")
-                    ->searchable(['nombres', 'apellidos']),
+                    ->searchable(query: Buscador::relacion('trabajador', 'nombres', 'apellidos')),
                 TextColumn::make('fecha_hora_entrada')
                     ->label('Entrada')
                     ->dateTime('d/m/Y H:i')

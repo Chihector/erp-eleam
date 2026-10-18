@@ -8,6 +8,7 @@ use App\Filament\Resources\Ingresos\Pages\ListIngresos;
 use App\Filament\Resources\Ingresos\Schemas\IngresoForm;
 use App\Filament\Resources\Ingresos\Tables\IngresosTable;
 use App\Models\Ingreso;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +19,15 @@ class IngresoResource extends Resource
 {
     protected static ?string $model = Ingreso::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $modelLabel = 'Ingreso';
+    protected static ?string $pluralModelLabel = 'Ingresos';
+    protected static ?string $navigationLabel = 'Ingresos';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -44,5 +53,10 @@ class IngresoResource extends Resource
             'create' => CreateIngreso::route('/create'),
             'edit' => EditIngreso::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

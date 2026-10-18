@@ -8,6 +8,7 @@ use App\Filament\Resources\Vacacions\Pages\ListVacacions;
 use App\Filament\Resources\Vacacions\Schemas\VacacionForm;
 use App\Filament\Resources\Vacacions\Tables\VacacionsTable;
 use App\Models\Vacacion;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -25,6 +26,10 @@ class VacacionResource extends Resource
     protected static ?string $navigationLabel = 'Vacaciones';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSun;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
@@ -58,5 +63,10 @@ class VacacionResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

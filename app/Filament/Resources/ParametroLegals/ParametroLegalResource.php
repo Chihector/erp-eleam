@@ -18,7 +18,15 @@ class ParametroLegalResource extends Resource
 {
     protected static ?string $model = ParametroLegal::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $modelLabel = 'Parámetro Legal';
+    protected static ?string $pluralModelLabel = 'Parámetros Legales';
+    protected static ?string $navigationLabel = 'Parámetros Legales';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedScale;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -44,5 +52,10 @@ class ParametroLegalResource extends Resource
             'create' => CreateParametroLegal::route('/create'),
             'edit' => EditParametroLegal::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasRole('administrador') ?? false;
     }
 }

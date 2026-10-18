@@ -29,6 +29,13 @@ La interfaz, la portada, los mensajes de validación y las funciones estándar d
    - **Solo Lectura:** únicamente consulta la información, sin poder modificar nada.
    El sistema aplica estos permisos automáticamente según el rol; no requieres configurar nada más.
 
+6. **Menú lateral simple y ordenado:**
+   El menú de la izquierda está agrupado en **4 secciones colapsables** para que encuentres todo más rápido (haz clic en el título de la sección para plegarla o desplegarla):
+   - **Operación:** Turnos, Asistencias, Vacaciones y Licencias Médicas (el día a día).
+   - **Personal:** Trabajadores y Contratos.
+   - **Finanzas:** Ingresos, Gastos, Liquidaciones y Finiquitos.
+   - **Configuración:** Parámetros Legales y Usuarios *(solo visible para el Administrador)*.
+
 **Credenciales disponibles (con sus roles asignados):**
 | Usuario | Correo | RUT | Rol | Contraseña |
 | :--- | :--- | :--- | :--- | :--- |
@@ -36,6 +43,12 @@ La interfaz, la portada, los mensajes de validación y las funciones estándar d
 | **Administrador General** | `admin@eleam.cl` | `11111111-1` | Administrador | `password` |
 
 > **Seguridad:** Las cuentas y contraseñas de ejemplo son solo para desarrollo local. Cámbialas antes de poner el sistema en una red compartida o en producción.
+
+### 🔎 Búsqueda inteligente (sin tildes)
+En cualquier selector o buscador del sistema puedes escribir con o sin tildes, sin importar mayúsculas; el sistema encuentra el resultado igual:
+- `hector` encuentra a **Héctor**, `munoz` a **Muñoz** y `gonzalez` a **González**.
+- El **RUT** se encuentra con o sin puntos y guion: `19486694`, `19.486.694-1` o `19486694-1`.
+- Funciona en los selectores de trabajador (Turnos, Asistencias, Contratos, Vacaciones, Licencias Médicas, Finiquitos y Liquidaciones) y en el buscador de todas las tablas.
 
 ### Idioma de la aplicación
 - La configuración inicial del proyecto establece `APP_LOCALE=es` y `APP_FALLBACK_LOCALE=es`.
@@ -77,7 +90,7 @@ El sistema incluye un planificador interactivo que previene automáticamente err
 
 ### A. Programar un Turno
 1. En el menú, ve a **Turnos** > **Nuevo Turno**.
-2. Selecciona el **Trabajador**.
+2. Selecciona el **Trabajador** (escribe su nombre con o sin tildes, o su RUT: ver *🔎 Búsqueda inteligente* en la sección 1).
 3. Selecciona el **Tipo de Turno**:
    - **Día (08:00 a 20:00):** El sistema asigna automáticamente el horario de **8 a 8** (de 08:00 a 20:00 hrs del mismo día).
    - **Noche (20:00 a 08:00):** El sistema asigna automáticamente de **20:00 hrs a 08:00 hrs del día siguiente**.
@@ -171,6 +184,19 @@ El sistema calcula las liquidaciones con la normativa chilena oficial (Gratifica
    - Líneas de firma formal del Empleador y del Trabajador con su RUT.
 4. Puedes imprimirlo o descargarlo directamente a tu computadora para firma y archivo.
 
+### C. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
+1. En el menú, ve a **Liquidaciones**.
+2. Haz clic en el botón superior **"Libro de Remuneraciones DT"** (icono de descarga).
+3. Elige el **Mes** y **Año** del período que quieres exportar.
+4. Pulsa **Descargar CSV**.
+5. Se descargará un archivo `libro-remuneraciones-MM-AAAA.csv` que puedes abrir directamente en Excel con una fila por trabajador:
+   - Identificación (RUT, nombres, apellidos, cargo, tipo de contrato, fecha de ingreso).
+   - Haberes (Sueldo base, Gratificación, Movilización, Colación, Cargas familiares y totales).
+   - Descuentos legales (AFP, Salud, Seguro de Cesantía) y otros descuentos.
+   - **Sueldo Líquido** pagado en el período.
+
+> ℹ️ Este libro es una **versión simplificada de respaldo y revisión** de las remuneraciones del mes, exportable a Excel. Sirve para auditoría interna y como base de la información que se reporta a la Dirección del Trabajo.
+
 ---
 
 ## 📱 8. Cómo Usar y Probar el Sistema desde tu Teléfono Celular
@@ -211,7 +237,73 @@ Para que tu teléfono pueda ver la aplicación que corre en este computador:
 
 ---
 
-## ⚡ 9. Consejos de Rendimiento y Mantenimiento
+## 🩺 9. Módulo de Licencias Médicas (con Cálculo de Subsidio)
+
+Permite registrar las licencias médicas del personal y **calcula automáticamente el subsidio** que paga Fonasa, Isapre o la Mutual, según la normativa chilena.
+
+### A. Registrar una Licencia Médica
+1. En el menú, ve a **Licencias Médicas** (dentro del grupo *Operación*).
+2. Haz clic en **"Nueva Licencia Médica"**.
+3. Completa:
+   - **Trabajador:** Búscalo por RUT o nombre.
+   - **N° de Folio:** El número que trae el documento (opcional).
+   - **Tipo de Licencia:**
+     - *Común*: 75% del sueldo, con tope de 60 UF y **3 días de carencia** (los 3 primeros días no se pagan).
+     - *Maternal*: 100% del sueldo, sin carencia.
+     - *Accidente del Trabajo / Enfermedad Profesional*: 100% del sueldo, sin carencia (Mutual).
+   - **Entidad Emisora:** Fonasa, Isapre o Mutual de Seguridad.
+   - **Fechas de inicio y término del reposo.**
+4. Al guardar, el sistema calcula **solo**:
+   - Los **días de reposo** (corridos, ambos días inclusive).
+   - Los **días pagados** (descontando la carencia cuando corresponde).
+   - El **monto del subsidio** en pesos.
+
+### B. Revisar y Actualizar
+- En la tabla ves de un vistazo: tipo, fechas, días, subsidio y estado (**Pendiente / Validada / Rechazada**).
+- Puedes filtrar por estado o tipo de licencia.
+- Si editas las fechas o el tipo, **el subsidio se recalcula automáticamente** al guardar.
+- Marca la licencia como **Validada** cuando Fonasa/Isapre la apruebe, o **Rechazada** si fue objetada.
+
+> 💡 **Consejo:** el cálculo usa el sueldo base del contrato del trabajador y los parámetros legales (UF, sueldo mínimo) del mes de inicio de la licencia.
+
+---
+
+## 📕 10. Módulo de Finiquitos (con PDF)
+
+Permite calcular el finiquito de un trabajador al terminar su contrato, **con todas las indemnizaciones legales**, y descargarlo en PDF para la firma.
+
+### A. Calcular un Finiquito
+1. En el menú, ve a **Finiquitos** (dentro del grupo *Finanzas*).
+2. Haz clic en el botón superior **"Calcular Finiquito"**.
+3. Completa:
+   - **Trabajador.**
+   - **Causal del Término:** por ejemplo *Necesidades de la Empresa (Art. 161)* o *Renuncia Voluntaria*.
+   - **Fecha de Término.**
+4. El sistema calcula automáticamente:
+   - **Indemnización por Años de Servicio** (solo causal Art. 161): 30 días de sueldo por año, con **tope de 11 años** y sueldo tope de **90 UF**.
+   - **Indemnización sustitutiva del Aviso Previo:** 1 mes de sueldo (solo Art. 161).
+   - **Vacaciones Pendientes:** saldo legal no gozado valorizado por día.
+   - **Gratificación Proporcional** a los meses trabajados del año.
+   - El **Líquido a Pagar** final.
+
+### B. Descargar el Finiquito en PDF
+1. En la tabla de **Finiquitos**, pulsa **"Descargar PDF"** en la fila del trabajador.
+2. Se abrirá el documento formal con:
+   - Datos del trabajador, causal y fecha de término.
+   - Antigüedad (años y meses) y sueldo de cálculo.
+   - Detalle de haberes (indemnizaciones, vacaciones, gratificación).
+   - Descuentos y **Líquido a Pagar**.
+   - Texto legal y **líneas de firma** del empleador y del trabajador.
+3. Imprímelo para la firma ante notario o ministro de fe.
+
+### C. Ajustes Manuales
+- Puedes editar cualquier finiquito generado (botón *Editar*) para corregir montos, agregar **otros descuentos** (anticipos, préstamos) o dejar observaciones.
+- Al guardar, el **Líquido a Pagar se recalcula solo** (Total Haberes − Descuentos).
+- Cambia el estado a **Firmado** una vez que el trabajador lo firme, para dejar constancia.
+
+---
+
+## ⚡ 11. Consejos de Rendimiento y Mantenimiento
 
 Si en algún momento notas que el sistema tarda en cargar o deseas reiniciar la información:
 

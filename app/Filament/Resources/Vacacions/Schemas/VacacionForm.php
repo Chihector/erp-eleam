@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources\Vacacions\Schemas;
 
-use Filament\Schemas\Schema;
-
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Placeholder;
+use App\Filament\Support\SelectTrabajador;
 use App\Models\Trabajador;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class VacacionForm
 {
@@ -21,11 +21,7 @@ class VacacionForm
                 Section::make('Detalles de la Solicitud')
                     ->columns(['sm' => 1, 'md' => 2])
                     ->schema([
-                        Select::make('trabajador_id')
-                            ->label('Trabajador')
-                            ->relationship('trabajador', 'rut')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->rut} - {$record->nombres} {$record->apellidos}")
-                            ->searchable(['rut', 'nombres', 'apellidos'])
+                        SelectTrabajador::make()
                             ->required()
                             ->reactive() // Make it reactive so we can update the placeholder
                             ->columnSpan('full'),
@@ -33,9 +29,10 @@ class VacacionForm
                             ->label('Saldo de Vacaciones Disponible (Días)')
                             ->content(function (callable $get) {
                                 $trabajador = Trabajador::find($get('trabajador_id'));
-                                if (!$trabajador) {
+                                if (! $trabajador) {
                                     return '-';
                                 }
+
                                 return $trabajador->saldo_vacaciones;
                             }),
                         Select::make('estado')

@@ -8,6 +8,7 @@ use App\Filament\Resources\Turnos\Pages\ListTurnos;
 use App\Filament\Resources\Turnos\Schemas\TurnoForm;
 use App\Filament\Resources\Turnos\Tables\TurnosTable;
 use App\Models\Turno;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -25,6 +26,10 @@ class TurnoResource extends Resource
     protected static ?string $navigationLabel = 'Turnos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -58,5 +63,10 @@ class TurnoResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

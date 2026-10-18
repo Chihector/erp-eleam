@@ -82,6 +82,44 @@ Sistema integral de gestión de personal, planificación de turnos, control de a
 - [x] Portada de bienvenida en español, con enlaces directos al panel de administración y al inicio de sesión.
 - [x] Pruebas de regresión para confirmar el idioma del inicio de sesión, la portada, el panel y los mensajes de validación.
 
+### ✅ Etapa 9: Menú simplificado y despliegue con Docker + PostgreSQL
+- [x] **Menú lateral organizado en 4 secciones colapsables** para reducir la carga visual:
+  - **Operación:** Turnos, Asistencias, Vacaciones, Licencias Médicas.
+  - **Personal:** Trabajadores, Contratos.
+  - **Finanzas:** Ingresos, Gastos, Liquidaciones, Finiquitos.
+  - **Configuración:** Parámetros Legales, Usuarios *(visibles solo para el Administrador)*.
+- [x] Iconos distintivos por módulo y visibilidad automática según el rol del usuario.
+- [x] **Despliegue profesional con Docker:** `Dockerfile` (nginx + PHP-FPM + OPcache), `docker-compose.yml` (aplicación + PostgreSQL 16) y guía completa en **[docs/DESPLIEGUE_DOCKER.md](docs/DESPLIEGUE_DOCKER.md)**.
+- [x] **Migración de datos SQLite → PostgreSQL en un comando:** `php artisan eleam:migrate-sqlite` (copia tablas, convierte booleanos y sincroniza secuencias).
+- [x] **Índices de rendimiento** en turnos, asistencias, liquidaciones, vacaciones, gastos e ingresos para acelerar las consultas más frecuentes.
+- [x] **Despliegue como App Web sin Docker:** instalador automático para servidor Ubuntu (`deploy/instalar-servidor.sh`), script de actualización (`deploy/actualizar.sh`), respaldo automático (`deploy/respaldar.sh`) y guía en **[docs/DESPLIEGUE_SERVIDOR.md](docs/DESPLIEGUE_SERVIDOR.md)**.
+- [x] **Comando para crear/restablecer administradores con clave segura:** `php artisan eleam:admin-crear`.
+
+### ✅ Etapa 10: Licencias Médicas, Finiquitos y Libro de Remuneraciones DT
+- [x] **Módulo de Licencias Médicas** (menú *Operación*):
+  - Registro de folio, tipo (Común, Maternal, Accidente del Trabajo, Enfermedad Profesional), entidad emisora (Fonasa, Isapre, Mutual), fechas y estado (Pendiente, Validada, Rechazada).
+  - Servicio `SubsidioLicenciaService` con cálculo automático del subsidio:
+    - *Común:* 75% del sueldo diario, tope de 60 UF y 3 días de carencia.
+    - *Maternal y Laboral:* 100% del sueldo, sin carencia.
+  - Los días de reposo y el subsidio se recalculan automáticamente al guardar o editar.
+- [x] **Módulo de Finiquitos** (menú *Finanzas*):
+  - Botón *"Calcular Finiquito"* con la causal del término (Art. 159, 160, 161, renuncia).
+  - Servicio `FiniquitoService` con normativa chilena:
+    - Indemnización por años de servicio: 30 días por año, **tope 11 años** y sueldo tope **90 UF** (causal Art. 161).
+    - Indemnización sustitutiva del aviso previo: 1 mes de sueldo.
+    - Vacaciones pendientes valorizadas y gratificación proporcional.
+  - **PDF formal del finiquito** con detalle de haberes, descuentos, líquido a pagar y líneas de firma.
+  - Recalculo automático del líquido al ajustar descuentos manualmente.
+- [x] **Libro de Remuneraciones Digital (DT) en CSV:**
+  - Botón *"Libro de Remuneraciones DT"* en el módulo de Liquidaciones.
+  - Exporta el período completo en CSV con BOM UTF-8 (compatible con Excel en español): identificación del trabajador, tipo de contrato, haberes, descuentos legales y líquido pagado.
+
+### ✅ Etapa 11: Búsqueda inteligente en todo el sistema
+- [x] **Búsqueda tolerante a tildes y mayúsculas:** escribir `hector` encuentra a **Héctor**, `munoz` a **Muñoz** y `gonzalez` a **González**, tanto en los selectores de trabajador como en el buscador de todas las tablas.
+- [x] Aplica a los selectores de **Turnos, Asistencias, Contratos, Vacaciones, Licencias Médicas, Finiquitos y Liquidaciones** (incluido el botón *"Generar Liquidación Mensual"*).
+- [x] **Búsqueda de RUT con o sin formato:** `19486694`, `19.486.694-1` y `19486694-1` encuentran al mismo trabajador.
+- [x] Implementado con `App\Support\Buscador`, que normaliza el término buscado y los datos en PHP y en SQL (compatible con SQLite y PostgreSQL).
+
 ---
 
 ## 💻 Puesta en Marcha Rápida
@@ -94,6 +132,32 @@ php artisan serve --host=0.0.0.0 --port=8000
 ### 2. Ingresar al panel administrativo
 - **Desde tu PC:** 👉 **[http://localhost:8000/admin](http://localhost:8000/admin)**
 - **Desde tu teléfono móvil:** 👉 **`http://192.168.1.122:8000/admin`**
+
+### 🐳 Modo profesional con Docker + PostgreSQL
+
+Para instalar el sistema con base de datos PostgreSQL, respaldos fáciles y acceso
+estable desde varios dispositivos a la vez:
+
+```bash
+copy .env.production.example .env.production
+docker compose --env-file .env.production up -d --build
+docker compose --env-file .env.production exec app php artisan eleam:migrate-sqlite
+```
+
+### 🌐 Publicar como App Web (sin Docker — recomendado)
+
+Para tener el sistema en internet con tu propio dominio (ej: `erp.tu-eleam.cl`),
+accesible desde cualquier PC o teléfono sin depender de una PC encendida:
+
+```bash
+# En un servidor Ubuntu limpio (VPS), un solo comando:
+sudo bash deploy/instalar-servidor.sh erp.tu-eleam.cl \
+     https://github.com/chicohector953/Erp-eleam.git tu-correo@dominio.cl
+```
+
+📖 **Guías completas paso a paso:**
+- 🌐 **[docs/DESPLIEGUE_SERVIDOR.md](docs/DESPLIEGUE_SERVIDOR.md)** — App web propia (VPS, sin Docker, recomendado)
+- 🐳 **[docs/DESPLIEGUE_DOCKER.md](docs/DESPLIEGUE_DOCKER.md)** — Docker + PostgreSQL
 
 **Credenciales disponibles (con sus roles asignados):**
 | Usuario | Correo | RUT | Rol | Contraseña |
@@ -137,9 +201,21 @@ php artisan test --filter=SpanishLocaleTest
 
 # Cálculo de totales de finanzas (servicio FinanzasService)
 php artisan test --filter=FinanzasServiceTest
+
+# Cálculo del subsidio de Licencias Médicas (75% común / 100% maternal y laboral)
+php artisan test --filter=LicenciaMedicaTest
+
+# Cálculo de Finiquitos (indemnizaciones, topes legales y PDF)
+php artisan test --filter=FiniquitoTest
+
+# Exportación del Libro de Remuneraciones DT (CSV)
+php artisan test --filter=LibroRemuneracionesTest
+
+# Búsqueda tolerante a tildes (selectores de trabajador y tablas)
+php artisan test --filter=BusquedaSinAcentosTest
 ```
 
-La suite completa se ejecuta con `php artisan test`. Última verificación: **34 pruebas aprobadas y 76 aserciones**.
+La suite completa se ejecuta con `php artisan test`. Última verificación: **64 pruebas aprobadas y 171 aserciones**.
 
 ---
 

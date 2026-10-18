@@ -8,6 +8,7 @@ use App\Filament\Resources\Asistencias\Pages\ListAsistencias;
 use App\Filament\Resources\Asistencias\Schemas\AsistenciaForm;
 use App\Filament\Resources\Asistencias\Tables\AsistenciasTable;
 use App\Models\Asistencia;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +19,15 @@ class AsistenciaResource extends Resource
 {
     protected static ?string $model = Asistencia::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $modelLabel = 'Asistencia';
+    protected static ?string $pluralModelLabel = 'Asistencias';
+    protected static ?string $navigationLabel = 'Asistencias';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClock;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -44,5 +53,10 @@ class AsistenciaResource extends Resource
             'create' => CreateAsistencia::route('/create'),
             'edit' => EditAsistencia::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

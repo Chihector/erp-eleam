@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Trabajadors\Tables;
 
+use App\Support\Buscador;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Table;
-
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class TrabajadorsTable
 {
@@ -15,10 +15,10 @@ class TrabajadorsTable
     {
         return $table
             ->columns([
-                TextColumn::make('rut')->label('RUT')->searchable(),
-                TextColumn::make('nombres')->label('Nombres')->searchable(),
-                TextColumn::make('apellidos')->label('Apellidos')->searchable(),
-                TextColumn::make('cargo')->label('Cargo')->searchable(),
+                TextColumn::make('rut')->label('RUT')->searchable(query: Buscador::columna('rut')),
+                TextColumn::make('nombres')->label('Nombres')->searchable(query: Buscador::columna('nombres')),
+                TextColumn::make('apellidos')->label('Apellidos')->searchable(query: Buscador::columna('apellidos')),
+                TextColumn::make('cargo')->label('Cargo')->searchable(query: Buscador::columna('cargo')),
                 TextColumn::make('fecha_ingreso')->label('Fecha Ingreso')->date(),
             ])
             ->filters([

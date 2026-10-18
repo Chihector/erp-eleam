@@ -2,13 +2,15 @@
 
 namespace App\Filament\Resources\Turnos\Schemas;
 
-use Filament\Schemas\Schema;
-
-use Filament\Forms\Components\TextInput;
+use App\Filament\Support\SelectTrabajador;
+use App\Models\Turno;
+use Carbon\Carbon;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class TurnoForm
 {
@@ -19,11 +21,7 @@ class TurnoForm
                 Section::make('Detalles del Turno')
                     ->columns(['sm' => 1, 'md' => 2])
                     ->schema([
-                        Select::make('trabajador_id')
-                            ->label('Trabajador')
-                            ->relationship('trabajador', 'rut')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->rut} - {$record->nombres} {$record->apellidos}")
-                            ->searchable(['rut', 'nombres', 'apellidos'])
+                        SelectTrabajador::make()
                             ->required()
                             ->columnSpan('full'),
                         Select::make('tipo_turno')
@@ -40,7 +38,7 @@ class TurnoForm
                             ->live()
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $inicio = $get('fecha_inicio');
-                                $base = $inicio ? \Carbon\Carbon::parse($inicio) : \Carbon\Carbon::today();
+                                $base = $inicio ? Carbon::parse($inicio) : Carbon::today();
 
                                 if ($state === 'Dia') {
                                     $set('fecha_inicio', $base->copy()->setTime(8, 0)->format('Y-m-d H:i'));
@@ -68,9 +66,11 @@ class TurnoForm
                             ->seconds(false)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                if (! $state) return;
+                                if (! $state) {
+                                    return;
+                                }
                                 $tipo = $get('tipo_turno');
-                                $base = \Carbon\Carbon::parse($state);
+                                $base = Carbon::parse($state);
 
                                 if ($tipo === 'Dia') {
                                     $set('fecha_inicio', $base->copy()->setTime(8, 0)->format('Y-m-d H:i'));
@@ -81,21 +81,23 @@ class TurnoForm
                                 }
                             })
                             ->required()
-                            ->rule(function (callable $get, ?\Illuminate\Database\Eloquent\Model $record) {
+                            ->rule(function (callable $get, ?Model $record) {
                                 return function (string $attribute, $value, \Closure $fail) use ($get, $record) {
                                     $trabajadorId = $get('trabajador_id');
                                     $fechaFin = $get('fecha_fin');
-                                    if (!$trabajadorId || !$fechaFin) return;
+                                    if (! $trabajadorId || ! $fechaFin) {
+                                        return;
+                                    }
 
-                                    $overlapping = \App\Models\Turno::where('trabajador_id', $trabajadorId)
+                                    $overlapping = Turno::where('trabajador_id', $trabajadorId)
                                         ->when($record, fn ($q) => $q->where('id', '!=', $record->id))
                                         ->where(function ($query) use ($value, $fechaFin) {
                                             $query->whereBetween('fecha_inicio', [$value, $fechaFin])
-                                                  ->orWhereBetween('fecha_fin', [$value, $fechaFin])
-                                                  ->orWhere(function ($q) use ($value, $fechaFin) {
-                                                      $q->where('fecha_inicio', '<=', $value)
+                                                ->orWhereBetween('fecha_fin', [$value, $fechaFin])
+                                                ->orWhere(function ($q) use ($value, $fechaFin) {
+                                                    $q->where('fecha_inicio', '<=', $value)
                                                         ->where('fecha_fin', '>=', $fechaFin);
-                                                  });
+                                                });
                                         })->exists();
 
                                     if ($overlapping) {

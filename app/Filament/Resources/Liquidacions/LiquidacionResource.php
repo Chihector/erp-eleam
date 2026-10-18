@@ -8,6 +8,7 @@ use App\Filament\Resources\Liquidacions\Pages\ListLiquidacions;
 use App\Filament\Resources\Liquidacions\Schemas\LiquidacionForm;
 use App\Filament\Resources\Liquidacions\Tables\LiquidacionsTable;
 use App\Models\Liquidacion;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +19,15 @@ class LiquidacionResource extends Resource
 {
     protected static ?string $model = Liquidacion::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $modelLabel = 'Liquidación';
+    protected static ?string $pluralModelLabel = 'Liquidaciones';
+    protected static ?string $navigationLabel = 'Liquidaciones';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedReceiptPercent;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
@@ -44,5 +53,10 @@ class LiquidacionResource extends Resource
             'create' => CreateLiquidacion::route('/create'),
             'edit' => EditLiquidacion::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

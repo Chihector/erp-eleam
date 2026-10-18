@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Asistencias\Schemas;
 
+use App\Filament\Support\SelectTrabajador;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Schema;
-
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class AsistenciaForm
 {
@@ -19,11 +18,7 @@ class AsistenciaForm
                 Section::make('Registro de Asistencia (Reloj Control)')
                     ->columns(['sm' => 1, 'md' => 2])
                     ->schema([
-                        Select::make('trabajador_id')
-                            ->label('Trabajador')
-                            ->relationship('trabajador', 'rut')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->rut} - {$record->nombres} {$record->apellidos}")
-                            ->searchable(['rut', 'nombres', 'apellidos'])
+                        SelectTrabajador::make()
                             ->required(),
                         Select::make('turno_id')
                             ->label('Turno Planificado (Opcional)')
@@ -40,7 +35,7 @@ class AsistenciaForm
                         Textarea::make('observaciones')
                             ->label('Observaciones (Ej: Llegó tarde por x motivo)')
                             ->columnSpan('full'),
-                    ])
+                    ]),
             ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Filament\Resources\Gastos\Pages\ListGastos;
 use App\Filament\Resources\Gastos\Schemas\GastoForm;
 use App\Filament\Resources\Gastos\Tables\GastosTable;
 use App\Models\Gasto;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -24,7 +25,9 @@ class GastoResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Gastos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administración';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'categoria';
 
@@ -52,5 +55,10 @@ class GastoResource extends Resource
             'create' => CreateGasto::route('/create'),
             'edit' => EditGasto::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(User::ROLES_PANEL) ?? false;
     }
 }

@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\Turnos\Tables;
 
+use App\Support\Buscador;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 
 class TurnosTable
 {
@@ -22,12 +22,12 @@ class TurnosTable
                 TextColumn::make('trabajador.nombres')
                     ->label('Trabajador')
                     ->formatStateUsing(fn ($record) => "{$record->trabajador?->nombres} {$record->trabajador?->apellidos}")
-                    ->description(fn ($record) => 'Turno: ' . $record->tipo_turno)
-                    ->searchable(['nombres', 'apellidos']),
+                    ->description(fn ($record) => 'Turno: '.$record->tipo_turno)
+                    ->searchable(query: Buscador::relacion('trabajador', 'nombres', 'apellidos')),
 
                 TextColumn::make('fecha_inicio')
                     ->label('Fecha y Horario')
-                    ->formatStateUsing(fn ($record) => \Carbon\Carbon::parse($record->fecha_inicio)->format('d/m/Y') . ' (' . \Carbon\Carbon::parse($record->fecha_inicio)->format('H:i') . ' a ' . \Carbon\Carbon::parse($record->fecha_fin)->format('H:i') . ')')
+                    ->formatStateUsing(fn ($record) => Carbon::parse($record->fecha_inicio)->format('d/m/Y').' ('.Carbon::parse($record->fecha_inicio)->format('H:i').' a '.Carbon::parse($record->fecha_fin)->format('H:i').')')
                     ->sortable(),
 
                 TextColumn::make('estado')

@@ -1,0 +1,74 @@
+# =============================================================================
+# ERP ELEAM — Orquestación Docker (aplicación + PostgreSQL)
+# =============================================================================
+# Uso (siempre con --env-file para que ${VARIABLES} se resuelvan):
+#
+#   1. Copiar la plantilla de entorno:
+#        copy .env.production.example .env.production
+#      y editar APP_KEY y DB_PASSWORD.
+#
+#   2. Construir y levantar todo:
+#        docker compose --env-file .env.production up -d --build
+#
+#   3. (Solo si hay datos antiguos en SQLite) migrarlos una vez:
+#        docker compose --env-file .env.production exec app \
+#            php artisan eleam:migrate-sqlite
+#
+#   4. Abrir en el navegador: http://localhost:8000  (o la IP del servidor)
+#
+# Notas:
+#   - APP_PORT en .env.production permite cambiar el puerto público.
+#   - Los datos de PostgreSQL viven en el volumen "pgdata" (persistente).
+#   - Los archivos subidos y logs viven en el volumen "storage" (persistente).
+#   - Para respaldar: docker compose exec postgres pg_dump -U eleam eleam > respaldo.sql
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-eleam}
+      POSTGRES_USER: ${DB_USERNAME:-eleam}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en .env.production}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eleam} -d ${DB_DATABASE:-eleam}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      - eleam
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      # Dentro de la red Docker la base siempre es el servicio "postgres".
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "true"
+    volumes:
+      - storage:/var/www/html/storage
+      # Base SQLite antigua (solo lectura) para migrar los datos una vez.
+      # Puede quitar esta línea si no hay datos que migrar.
+      - ./database/database.sqlite:/var/www/html/database/database.sqlite:ro
+    ports:
+      - "${APP_PORT:-8000}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eleam
+
+volumes:
+  pgdata:
+  storage:
+
+networks:
+  eleam:

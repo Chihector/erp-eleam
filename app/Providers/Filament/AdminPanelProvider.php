@@ -33,6 +33,13 @@ class AdminPanelProvider extends PanelProvider
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('ERP ELEAM')
             ->sidebarCollapsibleOnDesktop()
+            ->collapsibleNavigationGroups(true)
+            ->navigationGroups([
+                'Operación',
+                'Personal',
+                'Finanzas',
+                'Configuración',
+            ])
             ->colors([
                 'primary' => Color::Blue,
             ])

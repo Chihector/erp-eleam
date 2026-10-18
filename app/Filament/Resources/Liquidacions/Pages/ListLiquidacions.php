@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Liquidacions\Pages;
 
 use App\Filament\Resources\Liquidacions\LiquidacionResource;
+use App\Filament\Support\SelectTrabajador;
 use App\Models\ParametroLegal;
 use App\Models\Trabajador;
+use App\Services\LibroRemuneracionesService;
 use App\Services\RemuneracionService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -27,11 +29,8 @@ class ListLiquidacions extends ListRecords
                 ->modalHeading('Calcular Liquidaciones de Sueldo')
                 ->modalDescription('Genera y calcula automáticamente las liquidaciones mensuales con la normativa legal chilena (Gratificación legal, Fonasa/Isapre, AFP y Seguro de Cesantía).')
                 ->form([
-                    Select::make('trabajador_id')
-                        ->label('Trabajador')
+                    SelectTrabajador::make()
                         ->placeholder('Todos los trabajadores con contrato activo')
-                        ->options(Trabajador::all()->mapWithKeys(fn ($t) => [$t->id => "{$t->rut} - {$t->nombres} {$t->apellidos}"]))
-                        ->searchable()
                         ->nullable()
                         ->helperText('Deja vacío para generar las liquidaciones de todo el personal a la vez.'),
 
@@ -100,16 +99,18 @@ class ListLiquidacions extends ListRecords
                             ->title('No hay trabajadores registrados en el sistema.')
                             ->danger()
                             ->send();
+
                         return;
                     }
 
-                    $service = new RemuneracionService();
+                    $service = new RemuneracionService;
                     $generadas = 0;
                     $sinContrato = [];
 
                     foreach ($trabajadores as $trabajador) {
-                        if (!$trabajador->contratos()->exists()) {
+                        if (! $trabajador->contratos()->exists()) {
                             $sinContrato[] = "{$trabajador->nombres} {$trabajador->apellidos}";
+
                             continue;
                         }
 
@@ -119,7 +120,7 @@ class ListLiquidacions extends ListRecords
 
                     if ($generadas > 0) {
                         Notification::make()
-                            ->title("Se generaron {$generadas} liquidación(es) para el período " . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/{$anio}.")
+                            ->title("Se generaron {$generadas} liquidación(es) para el período ".str_pad($mes, 2, '0', STR_PAD_LEFT)."/{$anio}.")
                             ->success()
                             ->send();
                     }
@@ -127,14 +128,72 @@ class ListLiquidacions extends ListRecords
                     if (count($sinContrato) > 0) {
                         Notification::make()
                             ->title('Trabajadores sin contrato registrado')
-                            ->body('No se pudo calcular para: ' . implode(', ', $sinContrato) . '. Deben tener un contrato registrado con sueldo base.')
+                            ->body('No se pudo calcular para: '.implode(', ', $sinContrato).'. Deben tener un contrato registrado con sueldo base.')
                             ->warning()
                             ->send();
                     }
                 }),
 
             CreateAction::make()->label('Nueva Liquidación Manual'),
+
+            Action::make('libro_dt')
+                ->label('Libro de Remuneraciones DT')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->modalHeading('Descargar Libro de Remuneraciones Digital')
+                ->modalDescription('Genera el archivo CSV con las remuneraciones del período para respaldo y revisión (formato simplificado para la Dirección del Trabajo).')
+                ->modalSubmitActionLabel('Descargar CSV')
+                ->form([
+                    Select::make('mes')
+                        ->label('Mes')
+                        ->options([
+                            1 => 'Enero',
+                            2 => 'Febrero',
+                            3 => 'Marzo',
+                            4 => 'Abril',
+                            5 => 'Mayo',
+                            6 => 'Junio',
+                            7 => 'Julio',
+                            8 => 'Agosto',
+                            9 => 'Septiembre',
+                            10 => 'Octubre',
+                            11 => 'Noviembre',
+                            12 => 'Diciembre',
+                        ])
+                        ->default(now()->month)
+                        ->required(),
+
+                    TextInput::make('anio')
+                        ->label('Año')
+                        ->numeric()
+                        ->default(now()->year)
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $mes = (int) $data['mes'];
+                    $anio = (int) $data['anio'];
+
+                    $servicio = app(LibroRemuneracionesService::class);
+
+                    if ($servicio->cantidadDelPeriodo($mes, $anio) === 0) {
+                        Notification::make()
+                            ->title('No hay liquidaciones en el período '.str_pad($mes, 2, '0', STR_PAD_LEFT)."/{$anio}.")
+                            ->body('Primero genera las liquidaciones del mes y luego vuelve a descargar el libro.')
+                            ->warning()
+                            ->send();
+
+                        return null;
+                    }
+
+                    $csv = $servicio->generarCsv($mes, $anio);
+                    $nombreArchivo = 'libro-remuneraciones-'.str_pad($mes, 2, '0', STR_PAD_LEFT)."-{$anio}.csv";
+
+                    return response()->streamDownload(
+                        fn () => print ($csv),
+                        $nombreArchivo,
+                        ['Content-Type' => 'text/csv; charset=UTF-8'],
+                    );
+                }),
         ];
     }
 }
-
