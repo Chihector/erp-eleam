@@ -91,8 +91,8 @@ php artisan test
 php artisan route:list --path=admin
 ```
 
-Las pruebas usan SQLite en memoria. La suite completa ejecuta **89 pruebas y
-284 aserciones**. La base SQLite local conserva los datos de prueba manual entre
+Las pruebas usan SQLite en memoria. La suite completa ejecuta **103 pruebas y
+318 aserciones**. La base SQLite local conserva los datos de prueba manual entre
 reinicios. No ejecutes `php artisan migrate:fresh` si quieres conservarlos: ese
 comando elimina todas las tablas y sus datos.
 

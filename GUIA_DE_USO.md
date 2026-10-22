@@ -376,3 +376,82 @@ Si en algún momento notas que el sistema tarda en cargar o deseas reiniciar la 
    ```bash
    php artisan test
    ```
+
+---
+
+## 🔔 12. Dashboard, Notificaciones y Respaldos
+
+### A. Dashboard operativo
+Al entrar a **`/admin`** verás un panel con:
+- **Estadísticas generales:** trabajadores, contratos por vencer, licencias activas, finiquitos pendientes y vacaciones.
+- **Gastos vs. ingresos:** gráfico de los últimos 12 meses.
+- **Actividad reciente:** últimos movimientos de liquidaciones, licencias, finiquitos, vacaciones, gastos e ingresos.
+- **Próximos turnos:** turnos programados para los próximos 14 días.
+
+Las tarjetas y tablas se actualizan automáticamente. Si un dato no aparece, revisa que el módulo correspondiente tenga registros.
+
+### B. Notificaciones diarias
+El sistema puede enviar avisos por correo y dejarlos en la base de datos:
+- Contratos que vencen en **30, 15, 7, 3 o 1 día**.
+- Trabajadores con más de **10 días** de vacaciones pendientes (con alerta especial sobre 15 días).
+- Licencias médicas que vencen en **7 días** o que siguen abiertas después de su fecha de término.
+
+Para ejecutarlo manualmente:
+```bash
+php artisan notificaciones:diarias
+php artisan notificaciones:diarias --dry-run
+php artisan notificaciones:diarias --solo=contratos
+```
+El envío real requiere configurar el correo en `.env` (`MAIL_MAILER`, `MAIL_HOST`, etc.). En local, `MAIL_MAILER=log` escribe los correos en el log en vez de enviarlos. Las notificaciones se envían en forma inmediata; no requieren un worker de colas.
+
+### C. Reportes PDF de notificaciones
+Genera un reporte con contratos, vacaciones, licencias y notificaciones enviadas:
+```bash
+php artisan reporte:notificaciones --periodo=semanal
+php artisan reporte:notificaciones --periodo=mensual --guardar
+php artisan reporte:notificaciones --periodo=semanal --email
+```
+El PDF se guarda en `storage/app/reportes/`. La opción `--email` envía el reporte a los usuarios con rol **administrador**; requiere correo configurado.
+
+### D. Respaldo a Google Drive
+El respaldo incluye la base SQLite, `storage/` y una copia del `.env` **sin secretos**. Para configurarlo:
+1. Crea una cuenta de servicio en Google Cloud y descarga su archivo JSON.
+2. Guarda el JSON fuera de Git; por ejemplo, en la raíz como `google-drive-credentials.json` (ya está en `.gitignore`).
+3. Crea una carpeta en Google Drive y copia su ID.
+4. Configura en `.env`:
+   ```dotenv
+   GOOGLE_DRIVE_CREDENTIALS_PATH=google-drive-credentials.json
+   GOOGLE_DRIVE_BACKUP_FOLDER_ID=ID_DE_LA_CARPETA
+   GOOGLE_DRIVE_BACKUP_RETENTION=30
+   ```
+5. Prueba sin subir nada:
+   ```bash
+   php artisan backup:google-drive --all --dry-run
+   ```
+6. Ejecuta el respaldo real:
+   ```bash
+   php artisan backup:google-drive --all
+   ```
+
+Si las credenciales o la carpeta no están configuradas, la tarea programada **se omite**; no se ejecuta un respaldo a medias.
+
+> **Seguridad:** nunca subas el archivo JSON de credenciales ni el `.env` real al repositorio. El respaldo sube una versión sanitizada del `.env`, pero aun así revisa los permisos de la carpeta de Drive.
+
+### E. Tareas programadas y mantenimiento
+El scheduler ejecuta:
+- **08:00:** notificaciones diarias.
+- **02:00:** respaldo a Google Drive (si está configurado).
+- **Domingo 03:00:** limpieza de logs antiguos.
+- **Día 1, 04:00:** optimización de la base de datos.
+- **Lunes 07:00:** reporte semanal.
+- **Día 1, 06:00:** reporte mensual.
+
+En local, déjalo corriendo en una terminal aparte:
+```bash
+php artisan schedule:work
+```
+En producción, configura el cron de Laravel (`php artisan schedule:run` cada minuto). También puedes ejecutar las mantenciones a mano:
+```bash
+php artisan log:clear
+php artisan db:optimize
+```

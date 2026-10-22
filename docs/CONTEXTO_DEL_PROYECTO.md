@@ -13,15 +13,16 @@ ni reportes oficiales.
 
 ## Estado conocido
 
-- El último commit revisado incorpora licencias médicas, finiquitos, exportación
-  CSV del libro de remuneraciones, búsqueda sin tildes y opciones de despliegue.
-- El trabajo local **sin commit** agrega actualización de UF/UTM desde
-  mindicador.cl, verificación humana de parámetros, AFP y salud por trabajador,
-  plan Isapre en UF, SIS informativo del empleador, controles de acceso más
-  estrictos y pruebas de CSV injection.
+- El commit `d1a8c94` incorpora licencias médicas, finiquitos, exportación CSV
+  del libro de remuneraciones, búsqueda sin tildes y opciones de despliegue,
+  además de la actualización de UF/UTM desde mindicador.cl, verificación humana
+  de parámetros, AFP y salud por trabajador, plan Isapre en UF, SIS informativo
+  del empleador, controles de acceso más estrictos y pruebas de CSV injection.
+- La integración posterior agrega dashboard operativo, notificaciones diarias,
+  reportes PDF, respaldo a Google Drive y tareas programadas.
 - La aplicación y sus pruebas están implementadas en Laravel; los detalles de
   cobertura y el resultado verificable más reciente se registran en
-  [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md). Estado actual: 89 pruebas y 284
+  [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md). Estado actual: 103 pruebas y 318
   aserciones aprobadas.
 - El repositorio no contiene `vendor/` de forma predeterminada; antes de correr
   pruebas en una instalación limpia se debe ejecutar `composer install`.

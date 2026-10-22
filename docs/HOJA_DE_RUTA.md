@@ -17,8 +17,9 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 ### P0 — Cerrar antes de entregar
 
 - [x] Ejecutar la suite completa en SQLite en memoria y registrar el resultado:
-  resultado actualizado en esta revisión: **89 pruebas y 284 aserciones
-  aprobadas**. Incluye previsión por trabajador, SIS, permisos y CSV.
+  resultado actualizado en esta revisión: **103 pruebas y 318 aserciones
+  aprobadas**. Incluye previsión por trabajador, SIS, permisos, dashboard,
+  notificaciones, reportes, respaldo simulado y CSV.
 - [ ] Confirmar con el usuario del negocio el alcance exacto de la entrega:
   demo, piloto interno o producción; qué módulos se usarán y quién los aprobará.
 - [ ] Obtener revisión laboral/contable de remuneraciones, licencias, vacaciones,
@@ -98,16 +99,14 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 ## Verificación de esta revisión
 
-- Repositorio: **cambios locales sin commit**. Revisar `git status` y el diff
-  antes de continuar; no descartar ni sobrescribir archivos.
-- Último commit: `10525ca` — licencias médicas, finiquitos, libro DT,
-  despliegue y búsqueda sin tildes.
+- Repositorio: **limpio y unificado**. La copia local es `Erp eleam` y la
+  rama publicada es `master`; los worktrees auxiliares fueron eliminados.
+- Últimos commits: `d1a8c94` (parámetros legales, previsión y seguridad) y el
+  commit de integración de dashboard, notificaciones, reportes y respaldos.
 - PHP disponible: 8.2.12; SQLite habilitado.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
-  compilados; el servidor escucha solo en loopback.
-- Pruebas HTTP: portada `/`, login `/admin/login` y salud `/up` responden 200;
-  `/admin` redirige al login sin sesión.
-- Suite completa: **89 aprobadas, 284 aserciones**.
+  compilados.
+- Suite completa: **103 aprobadas, 318 aserciones**.
 - Pruebas nuevas relevantes:
   - `RemuneracionPrevisionalTest`: AFP propia, Isapre con plan y mínimo de 7 %,
     SIS fuera del líquido, contrato vigente y errores por datos faltantes.
@@ -116,12 +115,19 @@ operativos definidos y aceptación legal/contable documentada. No usar
   - `ParametroLegalServiceTest`: actualización, verificación y conservación de
     topes.
   - `LibroRemuneracionesTest`: neutralización de fórmulas y separadores.
-- QA visual headless: `/admin`, `/admin/parametro-legals`,
+  - `DashboardWidgetsTest`: renderiza el dashboard y sus cuatro widgets con
+    datos reales.
+  - `NotificacionesDiariasTest`: detecta contratos, vacaciones y licencias, y
+    respeta el modo `--dry-run`.
+  - `ComandosMantenimientoTest`: comandos programados, limpieza de logs,
+    optimización, reporte PDF, envío por correo y respaldo simulado.
+- QA visual headless previa: `/admin`, `/admin/parametro-legals`,
   `/admin/trabajadors`, `/admin/gastos` y `/admin/liquidacions` responden 200,
   sin errores de consola ni requests fallidos. Un solo botón "Salir" visible en
-  escritorio y móvil (390 px), sin desborde horizontal.
+  escritorio y móvil (390 px), sin desborde horizontal. El dashboard nuevo está
+  cubierto además por `DashboardWidgetsTest`.
 - `vendor\bin\pint --dirty`: aplicado correctamente.
-- Migraciones nuevas ejecutadas en la SQLite local.
+- Migraciones legales y de notificaciones ejecutadas en la SQLite local.
 - Verificación de rutas: 41 rutas de administración registradas, incluidas las
   dos rutas PDF protegidas por autenticación y autorización.
 - La cuenta temporal de QA visual fue eliminada. Para entrar localmente,
@@ -139,5 +145,5 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 Para traspasar el trabajo a otra sesión de desarrollo o IA, consulta
 [CONTINUAR_CON_IA.md](CONTINUAR_CON_IA.md). Resume el estado del entorno local,
-los archivos cambiados sin commit, las pruebas ejecutadas y los riesgos
-funcionales que deben atenderse antes de nómina real.
+la integración publicada, las pruebas ejecutadas y los riesgos funcionales que
+deben atenderse antes de nómina real.

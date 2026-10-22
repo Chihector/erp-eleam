@@ -125,6 +125,16 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 - [x] **Búsqueda de RUT con o sin formato:** `19486694`, `19.486.694-1` y `19486694-1` encuentran al mismo trabajador.
 - [x] Implementado con `App\Support\Buscador`, que normaliza el término buscado y los datos en PHP y en SQL (compatible con SQLite y PostgreSQL).
 
+### ✅ Etapa 12: Dashboard operativo, notificaciones y respaldos
+- [x] Dashboard con tarjetas de trabajadores, contratos por vencer, licencias activas, finiquitos pendientes, vacaciones y riesgo DT.
+- [x] Gráfico de gastos vs. ingresos de los últimos 12 meses, actividad reciente y próximos turnos.
+- [x] Cálculo eficiente del saldo de vacaciones, sin consultas N+1 en listados y widgets.
+- [x] Notificaciones diarias por correo y en base de datos: contratos por vencer (30/15/7/3/1 días), vacaciones acumuladas y licencias médicas por vencer o vencidas.
+- [x] Reportes PDF semanales y mensuales de notificaciones, con envío opcional a administradores.
+- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite.
+- [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`.
+- [x] Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos programados.
+
 ---
 
 ## 💻 Puesta en Marcha Rápida
@@ -137,6 +147,13 @@ php artisan serve --host=0.0.0.0 --port=8000
 ### 2. Ingresar al panel administrativo
 - **Desde tu PC:** 👉 **[http://localhost:8000/admin](http://localhost:8000/admin)**
 - **Desde tu teléfono móvil:** 👉 **`http://192.168.1.122:8000/admin`**
+
+### 3. Ejecutar las tareas automáticas (opcional en local)
+El scheduler envía notificaciones, genera reportes y ejecuta mantenciones. En una terminal aparte:
+```bash
+php artisan schedule:work
+```
+En producción, en lugar de `schedule:work`, configura el cron de Laravel en el servidor. El respaldo a Google Drive solo se ejecuta si existen `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`.
 
 ### 🐳 Modo profesional con Docker + PostgreSQL
 
@@ -233,9 +250,16 @@ php artisan test --filter=SeguridadTest
 
 # Búsqueda tolerante a tildes (selectores de trabajador y tablas)
 php artisan test --filter=BusquedaSinAcentosTest
+
+# Dashboard, widgets y consultas del panel
+php artisan test --filter=DashboardWidgetsTest
+
+# Notificaciones diarias y reportes PDF
+php artisan test --filter=NotificacionesDiariasTest
+php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test`. Última verificación: **89 pruebas aprobadas y 284 aserciones**.
+La suite completa se ejecuta con `php artisan test`. Última verificación: **103 pruebas aprobadas y 318 aserciones**.
 
 Si todavía no configuraste el entorno local, crea `.env` desde `.env.example`
 antes de ejecutar los tests. PHPUnit usa una clave de cifrado fija exclusiva
