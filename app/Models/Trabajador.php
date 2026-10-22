@@ -19,7 +19,9 @@ class Trabajador extends Model implements Auditable
         'apellidos',
         'cargo',
         'afp',
+        'afp_tasa',
         'sistema_salud',
+        'salud_plan_uf',
         'fecha_ingreso',
         'color_calendario',
     ];
@@ -28,6 +30,8 @@ class Trabajador extends Model implements Auditable
     {
         return [
             'fecha_ingreso' => 'date',
+            'afp_tasa' => 'float',
+            'salud_plan_uf' => 'float',
         ];
     }
 

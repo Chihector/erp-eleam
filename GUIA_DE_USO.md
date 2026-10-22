@@ -4,6 +4,11 @@ Esta guía explica paso a paso cómo utilizar cada uno de los módulos del **ERP
 
 La interfaz, la portada, los mensajes de validación y las funciones estándar del panel están configurados en español.
 
+> **Importante sobre cálculos laborales:** las liquidaciones, licencias y
+> finiquitos son cálculos de apoyo implementados con reglas simplificadas. Antes
+> de pagar, firmar o presentar documentos, valida los parámetros del período y
+> los resultados con el responsable laboral/contable del establecimiento.
+
 ---
 
 ## 🔑 1. Acceso al Sistema
@@ -23,10 +28,10 @@ La interfaz, la portada, los mensajes de validación y las funciones estándar d
    A la derecha del campo de contraseña encontrarás el botón del ojito para comprobar visualmente que la clave esté bien escrita antes de pulsar **Entrar al Sistema**.
 5. **Roles y permisos (control de acceso):**
    El sistema reconoce cuatro roles, asignados a cada usuario. Solo quien tenga un rol asignado puede entrar al panel:
-   - **Administrador:** acceso total (puede crear, editar y borrar cualquier registro).
-   - **Jefe de Turno:** gestiona **Turnos**, **Asistencias** y **Vacaciones**; consulta el resto de los módulos.
-   - **Contador:** gestiona **Gastos**, **Ingresos** y **Liquidaciones**; consulta el resto de los módulos.
-   - **Solo Lectura:** únicamente consulta la información, sin poder modificar nada.
+   - **Administrador:** acceso total (puede crear, editar y borrar cualquier registro), incluidos **Parámetros Legales** y **Usuarios**.
+   - **Jefe de Turno:** gestiona **Turnos**, **Asistencias** y **Vacaciones**; consulta el resto de los módulos, salvo Configuración.
+   - **Contador:** gestiona **Gastos**, **Ingresos** y **Liquidaciones**; consulta el resto de los módulos, salvo Configuración.
+   - **Solo Lectura:** únicamente consulta la información, sin poder modificar nada y sin acceso a Configuración.
    El sistema aplica estos permisos automáticamente según el rol; no requieres configurar nada más.
 
 6. **Menú lateral simple y ordenado:**
@@ -36,13 +41,24 @@ La interfaz, la portada, los mensajes de validación y las funciones estándar d
    - **Finanzas:** Ingresos, Gastos, Liquidaciones y Finiquitos.
    - **Configuración:** Parámetros Legales y Usuarios *(solo visible para el Administrador)*.
 
-**Credenciales disponibles (con sus roles asignados):**
-| Usuario | Correo | RUT | Rol | Contraseña |
-| :--- | :--- | :--- | :--- | :--- |
-| **Héctor Contreras** | `hector@eleam.cl` | `19486694-1` | Jefe de Turno | `password` |
-| **Administrador General** | `admin@eleam.cl` | `11111111-1` | Administrador | `password` |
+**Creación de la cuenta de acceso:**
 
-> **Seguridad:** Las cuentas y contraseñas de ejemplo son solo para desarrollo local. Cámbialas antes de poner el sistema en una red compartida o en producción.
+El proyecto ya no usa contraseñas fijas en los seeders. En local, `RoleSeeder`
+crea las cuentas demo con contraseñas aleatorias y las imprime una sola vez en
+la consola; fuera de local no crea usuarios demo. Para crear o restablecer un
+administrador con una clave nueva:
+
+```bash
+php artisan eleam:admin-crear admin@eleam.cl
+```
+
+El comando muestra la contraseña una sola vez. Guárdala en un gestor de
+contraseñas y no la publiques ni la escribas en documentación. Si necesitas una
+cuenta de Jefe de Turno, créala desde **Usuarios** con el rol correspondiente.
+
+> **Seguridad:** la cuenta de administrador es la única que puede ver
+> **Parámetros Legales** y **Usuarios**. No compartas esas credenciales ni dejes
+> cuentas de prueba con claves conocidas en una red compartida.
 
 ### 🔎 Búsqueda inteligente (sin tildes)
 En cualquier selector o buscador del sistema puedes escribir con o sin tildes, sin importar mayúsculas; el sistema encuentra el resultado igual:
@@ -67,10 +83,17 @@ Para que un colaborador pueda tener turnos asignados o recibir su liquidación d
    - **RUT:** Debe tener formato con guión (ej: `12345678-9`). El sistema valida automáticamente el dígito verificador.
    - **Nombres y Apellidos:** Datos personales del trabajador.
    - **Cargo:** Cargo desempeñado (ej: Cuidador(a), Enfermero(a), Terapeuta, etc.).
-   - **AFP y Sistema de Salud:** Previsión a la que pertenece (Fonasa, Isapre, AFP Habitat, Modelo, etc.).
+   - **AFP:** Nombre de la administradora (Capital, Cuprum, Habitat, Modelo, PlanVital, Provida, Uno).
+   - **Tasa AFP (%):** Tasa propia del trabajador: 10 % obligatorio más la comisión vigente de su AFP. Si se deja vacía, el sistema usa la tasa de referencia configurada, pero lo recomendable es registrar la tasa real.
+   - **Sistema de Salud:** Fonasa o Isapre.
+   - **Plan Isapre (UF):** Obligatorio si el trabajador está en Isapre. Se cobra el plan contratado, con un mínimo legal equivalente al 7 % de la renta imponible.
    - **Fecha de Ingreso:** Fecha en la que comenzó a trabajar (no puede ser una fecha futura).
    - **Color de Calendario:** Elige un color identificador para visualizar rápidamente sus turnos en el calendario.
 3. Haz clic en **Guardar**.
+
+> Si falta la AFP, la tasa, el sistema de salud o el plan de Isapre, el sistema
+> bloquea la liquidación de ese trabajador y muestra el dato faltante. Esto evita
+> generar pagos con una previsión inventada o heredada de otra persona.
 
 ### B. Registrar un Contrato
 1. Ve a **Contratos** > **Nuevo Contrato**.
@@ -142,7 +165,9 @@ Permite llevar el control del flujo de efectivo del establecimiento.
 1. Ve a **Gastos** > **Nuevo Gasto**.
 2. Ingresa la descripción, categoría (Alimentación, Farmacia/Medicamentos, Insumos médicos, Servicios básicos, etc.).
 3. Monto y fecha del egreso.
-4. Puedes adjuntar el comprobante o boleta/factura digital.
+4. Puedes adjuntar el comprobante o boleta/factura digital (PDF, JPG o PNG de
+   hasta 5 MB). Se guarda en almacenamiento privado y se descarga desde la fila
+   del gasto con **"Ver comprobante"**.
 
 ### B. Registrar Ingresos
 1. Ve a **Ingresos** > **Nuevo Ingreso**.
@@ -158,9 +183,34 @@ Permite llevar el control del flujo de efectivo del establecimiento.
 
 ## 📄 7. Módulo de Remuneraciones y Liquidaciones de Sueldo (PDF)
 
-El sistema calcula las liquidaciones con la normativa chilena oficial (Gratificación legal, topes imponibles, descuentos de AFP, Fonasa/Salud y Seguro de Cesantía).
+El sistema calcula las liquidaciones con reglas de apoyo (gratificación legal,
+topes imponibles, AFP y salud por trabajador, seguro de cesantía y SIS
+informativo del empleador). La salud usa el tope imponible de 60 UF para el
+mínimo legal de Fonasa/Isapre. **No reemplaza la revisión laboral/contable** y
+todavía no calcula el impuesto único de segunda categoría.
 
-### A. Generar Liquidaciones Mensuales (1 solo clic)
+> **Límites actuales:** los días trabajados se ingresan manualmente (30 por
+> defecto); el sistema no descuenta solo las licencias o ausencias. Antes de
+> pagar, revisa esos días y los resultados con el responsable del ELEAM.
+
+### A. Actualizar y verificar los parámetros legales del período
+1. Entra como **Administrador** y ve a **Configuración > Parámetros Legales**.
+2. Pulsa **"Actualizar desde mindicador.cl"**.
+3. Elige **Mes** y **Año**. Opcionalmente, indica el **sueldo mínimo** si deseas
+   reemplazar el valor configurado para esa fecha de vigencia.
+4. El sistema consulta la UF y la UTM, guarda el origen, la fecha y deja el
+   período como **SIN VERIFICAR**.
+5. Revisa la UF, UTM, sueldo mínimo, topes y porcentaje SIS contra la normativa
+   vigente. Si todo coincide, pulsa **"Verificar"**: queda registrado el usuario
+   y la fecha de revisión.
+6. Si más adelante se actualiza un valor y cambia, la verificación se borra y
+   debe hacerse de nuevo.
+
+> **Importante:** mindicador.cl es una fuente externa de referencia para UF y
+> UTM. Los topes previsionales, el SIS y el sueldo mínimo no se validan
+> automáticamente contra la ley; deben confirmarse con fuentes oficiales.
+
+### B. Generar Liquidaciones Mensuales (1 solo clic)
 1. En el menú, ve a **Liquidaciones**.
 2. Haz clic en el botón superior azul **"Generar Liquidación Mensual"**.
 3. Se abrirá una ventana donde puedes elegir:
@@ -169,22 +219,26 @@ El sistema calcula las liquidaciones con la normativa chilena oficial (Gratifica
    - **Días Trabajados:** 30 días para mes completo (o ajusta si hubo licencias/ausencias).
    - **Trabajador (Opcional):** Déjalo en blanco para **generar la liquidación de todos los trabajadores con contrato a la vez**, o elige a un trabajador puntual.
 4. Haz clic en **Generar**.
-5. El sistema procesará los cálculos y creará las liquidaciones al instante.
+5. El sistema procesará los cálculos y creará las liquidaciones al instante. Si
+   a un trabajador le falta AFP, tasa, salud o plan de Isapre, se informa el
+   error de ese caso y se continúa con los demás.
 
-### B. Descargar la Liquidación en PDF
+### C. Descargar la Liquidación en PDF
 1. En la tabla de **Liquidaciones**, ubica la fila del trabajador.
 2. Haz clic en el botón verde **"Descargar PDF"** (con icono de documento).
-3. Se abrirá inmediatamente una nueva pestaña con el documento oficial en PDF con:
+3. Se abrirá inmediatamente una nueva pestaña con el documento en PDF con:
    - Datos del empleador y del trabajador.
    - Detalle de **Haberes Imponibles** (Sueldo base y Gratificación legal).
    - Detalle de **Haberes No Imponibles** (Movilización, Colación, Cargas familiares).
-   - Desglose de **Descuentos Legales** (Fondo AFP, Salud 7%, Seguro Cesantía).
+   - Desglose de **Descuentos Legales**: AFP con la tasa del trabajador, Salud
+     (Fonasa 7 % o el plan Isapre) y Seguro de Cesantía.
+   - **SIS del empleador** como línea informativa: no se descuenta del líquido.
    - Monto final del **Sueldo Líquido a Pagar** en números y texto.
    - Registro de los turnos cumplidos en el período.
    - Líneas de firma formal del Empleador y del Trabajador con su RUT.
 4. Puedes imprimirlo o descargarlo directamente a tu computadora para firma y archivo.
 
-### C. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
+### D. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
 1. En el menú, ve a **Liquidaciones**.
 2. Haz clic en el botón superior **"Libro de Remuneraciones DT"** (icono de descarga).
 3. Elige el **Mes** y **Año** del período que quieres exportar.
@@ -231,9 +285,7 @@ Para que tu teléfono pueda ver la aplicación que corre en este computador:
 4. **Si Windows Defender te pregunta:**
    Si aparece una ventana de Firewall de Windows pidiendo confirmación para PHP en redes privadas, pulsa **"Permitir acceso"**.
 
-5. **Inicia sesión con cualquiera de las cuentas activas:**
-   - **Héctor Contreras:** RUT `19486694-1` (o `hector@eleam.cl`) / Rol: *Jefe de Turno* / Clave: `password`
-   - **Administrador General:** RUT `11111111-1` (o `admin@eleam.cl`) / Rol: *Administrador* / Clave: `password`
+5. **Inicia sesión con una cuenta activa:** por correo o RUT. En local, las cuentas demo se crean con contraseñas aleatorias que el seeder muestra una sola vez. Para el administrador, restablece la clave con `php artisan eleam:admin-crear admin@eleam.cl` siguiendo la [guía local](docs/PRUEBA_LOCAL.md). No expongas cuentas con claves conocidas a la red.
 
 ---
 

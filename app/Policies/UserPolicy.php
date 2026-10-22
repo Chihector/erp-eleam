@@ -11,12 +11,12 @@ class UserPolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->puedeVer($user);
+        return $this->soloAdministrador($user);
     }
 
     public function view(User $user, User $record): bool
     {
-        return $this->puedeVer($user);
+        return $this->soloAdministrador($user);
     }
 
     public function create(User $user): bool

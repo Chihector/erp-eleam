@@ -1,6 +1,6 @@
 # ERP ELEAM (Gestión Integral de Personal y Operaciones)
 
-Sistema integral de gestión de personal, planificación de turnos, control de asistencia, cálculo de vacaciones, finanzas y liquidaciones de sueldo para **Establecimientos de Larga Estadía para Adultos Mayores (ELEAM)** en Chile, diseñado bajo estricto cumplimiento de la normativa laboral y previsional chilena.
+Sistema de gestión de personal, planificación de turnos, control de asistencia, vacaciones, finanzas y remuneraciones para **Establecimientos de Larga Estadía para Adultos Mayores (ELEAM)** en Chile. Los cálculos laborales son apoyo operativo y requieren validación profesional antes de usarse para pagos o documentación oficial.
 
 ---
 
@@ -62,14 +62,18 @@ Sistema integral de gestión de personal, planificación de turnos, control de a
 - [x] Control de Asistencia (Reloj Control) con registro de marcas de entrada y salida vinculadas a turnos programados.
 
 ### ✅ Etapa 6: Remuneraciones y Liquidaciones de Sueldo (PDF)
-- [x] Módulo `ParametroLegal` con valores preconfigurados de la legislación chilena (Sueldo mínimo de $500.000, UF, UTM, tope imponible AFP de 84.3 UF, tope Cesantía de 126.6 UF).
-- [x] Servicio legal `RemuneracionService`:
+- [x] Módulo `ParametroLegal` con trazabilidad de origen, fecha de actualización y verificación humana por usuario.
+- [x] **Actualización de UF y UTM desde `https://mindicador.cl/api`** y sueldo mínimo desde una tabla de vigencia configurable (`config/legal.php`), mediante el panel o el comando `php artisan eleam:parametros-actualizar`. Los topes y el SIS se conservan y deben revisarse contra la normativa.
+- [x] Servicio `RemuneracionService`:
   - Cálculo de Sueldo Base proporcional a los días trabajados.
   - Gratificación Legal automática (25% con tope de 4.75 ingresos mínimos anuales / 12).
-  - Descuentos previsionales obligatorios de AFP y Salud (7%).
+  - AFP con la tasa propia de cada trabajador (`trabajadores.afp_tasa`) o la tasa de referencia configurada.
+  - Salud según el trabajador: Fonasa 7% o plan Isapre en UF, con mínimo legal de 7% y tope imponible de 60 UF.
   - Seguro de Cesantía (0.6% trabajador para contratos indefinidos).
-- [x] **Generador masivo e individual:** Botón *"Generar Liquidación Mensual"* en el panel para liquidar el sueldo de todo el personal activo en un solo clic.
-- [x] **Exportación a PDF oficial:** Emisión y descarga de liquidaciones en PDF formato estándar chileno con detalle de haberes, descuentos, desglose de turnos y líneas de firma de empleador y trabajador.
+  - **SIS como aporte informativo del empleador**, sin descontarlo del líquido.
+- [x] **Generador masivo e individual:** Botón *"Generar Liquidación Mensual"* en el panel; si faltan datos previsionales de un trabajador, se informa ese caso y se continúa con el resto.
+- [x] **Exportación a PDF:** Emisión y descarga de liquidaciones en PDF con detalle de haberes, descuentos, SIS del empleador, desglose de turnos y líneas de firma.
+- [ ] Pendiente de revisión laboral/contable: impuesto único de segunda categoría, otros descuentos y descuento automático de licencias/ausencias. Los días trabajados se ingresan manualmente.
 
 ### ✅ Etapa 7: Experiencia Móvil y Autenticación Flexible
 - [x] **Inicio de sesión híbrido (Correo O RUT):** El usuario puede ingresar usando su correo electrónico o su RUT chileno (con o sin puntos/guión).
@@ -113,6 +117,7 @@ Sistema integral de gestión de personal, planificación de turnos, control de a
 - [x] **Libro de Remuneraciones Digital (DT) en CSV:**
   - Botón *"Libro de Remuneraciones DT"* en el módulo de Liquidaciones.
   - Exporta el período completo en CSV con BOM UTF-8 (compatible con Excel en español): identificación del trabajador, tipo de contrato, haberes, descuentos legales y líquido pagado.
+  - Neutraliza fórmulas de Excel y escapa separadores, comillas y saltos de línea, incluso si un nombre o cargo contiene caracteres especiales.
 
 ### ✅ Etapa 11: Búsqueda inteligente en todo el sistema
 - [x] **Búsqueda tolerante a tildes y mayúsculas:** escribir `hector` encuentra a **Héctor**, `munoz` a **Muñoz** y `gonzalez` a **González**, tanto en los selectores de trabajador como en el buscador de todas las tablas.
@@ -159,13 +164,19 @@ sudo bash deploy/instalar-servidor.sh erp.tu-eleam.cl \
 - 🌐 **[docs/DESPLIEGUE_SERVIDOR.md](docs/DESPLIEGUE_SERVIDOR.md)** — App web propia (VPS, sin Docker, recomendado)
 - 🐳 **[docs/DESPLIEGUE_DOCKER.md](docs/DESPLIEGUE_DOCKER.md)** — Docker + PostgreSQL
 
-**Credenciales disponibles (con sus roles asignados):**
-| Usuario | Correo | RUT | Rol | Contraseña |
-| :--- | :--- | :--- | :--- | :--- |
-| **Héctor Contreras** | `hector@eleam.cl` | `19486694-1` | Jefe de Turno | `password` |
-| **Administrador General** | `admin@eleam.cl` | `11111111-1` | Administrador | `password` |
+**Acceso local:**
 
-> **Importante:** Estas credenciales son únicamente para desarrollo local. Cámbialas antes de exponer el sistema a usuarios o redes no confiables; no uses estas contraseñas en producción.
+El proyecto no incluye contraseñas fijas. En local, el seeder crea las cuentas
+demo con claves aleatorias y las muestra una sola vez en la consola; fuera de
+local no crea usuarios demo. Para crear o restablecer tu administrador:
+
+```bash
+php artisan eleam:admin-crear admin@eleam.cl
+```
+
+El comando genera una contraseña aleatoria, la muestra una vez y asigna el rol
+**Administrador**. Guárdala en un gestor de contraseñas y no la publiques. Sigue
+la [guía de prueba local](docs/PRUEBA_LOCAL.md) para el resto de la preparación.
 
 ### Configuración regional
 La configuración inicial usa español de Chile para la interfaz (`APP_LOCALE=es`), español como idioma de respaldo (`APP_FALLBACK_LOCALE=es`) y español de España para los datos de prueba (`APP_FAKER_LOCALE=es_ES`). Al crear la configuración local, copia `.env.example` y genera una clave propia con `php artisan key:generate`.
@@ -208,16 +219,40 @@ php artisan test --filter=LicenciaMedicaTest
 # Cálculo de Finiquitos (indemnizaciones, topes legales y PDF)
 php artisan test --filter=FiniquitoTest
 
-# Exportación del Libro de Remuneraciones DT (CSV)
+# Exportación del Libro de Remuneraciones DT (CSV y anti fórmulas)
 php artisan test --filter=LibroRemuneracionesTest
+
+# AFP por trabajador, Isapre, SIS y contrato vigente
+php artisan test --filter=RemuneracionPrevisionalTest
+
+# Actualización y verificación de parámetros legales
+php artisan test --filter=ParametroLegalServiceTest
+
+# Permisos de configuración y acceso a PDF por rol
+php artisan test --filter=SeguridadTest
 
 # Búsqueda tolerante a tildes (selectores de trabajador y tablas)
 php artisan test --filter=BusquedaSinAcentosTest
 ```
 
-La suite completa se ejecuta con `php artisan test`. Última verificación: **64 pruebas aprobadas y 171 aserciones**.
+La suite completa se ejecuta con `php artisan test`. Última verificación: **89 pruebas aprobadas y 284 aserciones**.
+
+Si todavía no configuraste el entorno local, crea `.env` desde `.env.example`
+antes de ejecutar los tests. PHPUnit usa una clave de cifrado fija exclusiva
+para pruebas; no la reutilices en desarrollo ni producción.
 
 ---
 
 ## 📖 Documentación para el Usuario
 Para conocer a fondo el flujo de trabajo y uso diario del sistema, consulta la **[Guía de Uso del Usuario](GUIA_DE_USO.md)**.
+
+## 🧭 Contexto y entrega
+- [Contexto del proyecto](docs/CONTEXTO_DEL_PROYECTO.md) — arquitectura, módulos, límites de uso y cómo ejecutar pruebas.
+- [Hoja de ruta y preparación para entrega](docs/HOJA_DE_RUTA.md) — estado, prioridades de cierre y criterios para demo, piloto o producción.
+- [Prueba local en Windows](docs/PRUEBA_LOCAL.md) — preparación, acceso al navegador y cuenta local segura.
+- [Handoff para continuar con otra IA](docs/CONTINUAR_CON_IA.md) — cambios pendientes, pruebas, entorno y riesgos que debe conocer quien retome.
+
+Para cargar un conjunto sintético de trabajador, contrato, turnos, asistencia,
+vacaciones, licencia y finanzas en la base local, sigue la sección de escenario
+ficticio de la [guía de prueba local](docs/PRUEBA_LOCAL.md). No representa datos
+reales de personas ni valores legales certificados.

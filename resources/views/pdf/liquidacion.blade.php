@@ -107,6 +107,12 @@
             <td>TOTAL DESCUENTOS LEGALES</td>
             <td class="right">${{ number_format($liquidacion->total_descuentos_legales, 0, ',', '.') }}</td>
         </tr>
+        @if(($liquidacion->monto_sis ?? 0) > 0)
+        <tr>
+            <td style="color: #666;">Aporte SIS del empleador (no se descuenta del trabajador)</td>
+            <td class="right" style="color: #666;">${{ number_format($liquidacion->monto_sis, 0, ',', '.') }}</td>
+        </tr>
+        @endif
 
         <tr>
             <th colspan="2" class="section-title">OTROS DESCUENTOS</th>

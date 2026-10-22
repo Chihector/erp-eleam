@@ -19,6 +19,9 @@ class TrabajadorsTable
                 TextColumn::make('nombres')->label('Nombres')->searchable(query: Buscador::columna('nombres')),
                 TextColumn::make('apellidos')->label('Apellidos')->searchable(query: Buscador::columna('apellidos')),
                 TextColumn::make('cargo')->label('Cargo')->searchable(query: Buscador::columna('cargo')),
+                TextColumn::make('afp')->label('AFP')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('afp_tasa')->label('Tasa AFP')->suffix('%')->placeholder('Referencia')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('sistema_salud')->label('Salud')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('fecha_ingreso')->label('Fecha Ingreso')->date(),
             ])
             ->filters([

@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\Gastos\Schemas;
 
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class GastoForm
@@ -41,7 +41,11 @@ class GastoForm
                     ->numeric(),
                 FileUpload::make('comprobante')
                     ->label('Comprobante (Boleta/Factura)')
-                    ->directory('comprobantes_gastos'),
+                    ->disk('local')
+                    ->directory('comprobantes_gastos')
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                    ->maxSize(5120)
+                    ->helperText('Solo PDF, JPG o PNG de hasta 5 MB. Se guarda en almacenamiento privado.'),
             ]);
     }
 }

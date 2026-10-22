@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,17 +11,16 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-
-use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -30,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login(\App\Filament\Pages\Auth\Login::class)
+            ->login(Login::class)
             ->brandName('ERP ELEAM')
             ->sidebarCollapsibleOnDesktop()
             ->collapsibleNavigationGroups(true)
@@ -48,9 +48,9 @@ class AdminPanelProvider extends PanelProvider
                 fn (): HtmlString => new HtmlString('
                     <style>
                         /* Botón principal de Entrar / Iniciar Sesión */
-                        button[type="submit"],
-                        .fi-btn.fi-color-primary,
-                        .fi-ac-btn-action[type="submit"] {
+                        .fi-simple-layout button[type="submit"],
+                        .fi-simple-layout .fi-btn.fi-color-primary,
+                        .fi-simple-layout .fi-ac-btn-action[type="submit"] {
                             background-color: #2563eb !important;
                             background-image: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
                             color: #ffffff !important;
@@ -68,23 +68,38 @@ class AdminPanelProvider extends PanelProvider
                             width: 100% !important;
                         }
 
-                        button[type="submit"]:hover,
-                        .fi-btn.fi-color-primary:hover,
-                        .fi-ac-btn-action[type="submit"]:hover {
+                        .fi-simple-layout button[type="submit"]:hover,
+                        .fi-simple-layout .fi-btn.fi-color-primary:hover,
+                        .fi-simple-layout .fi-ac-btn-action[type="submit"]:hover {
                             background-image: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
                             box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.55) !important;
                             transform: translateY(-1px) !important;
                         }
 
-                        button[type="submit"]:active,
-                        .fi-btn.fi-color-primary:active {
+                        .fi-simple-layout button[type="submit"]:active,
+                        .fi-simple-layout .fi-btn.fi-color-primary:active {
                             transform: translateY(0px) !important;
                         }
 
-                        button[type="submit"] span,
-                        .fi-btn.fi-color-primary span {
+                        .fi-simple-layout button[type="submit"] span,
+                        .fi-simple-layout .fi-btn.fi-color-primary span {
                             color: #ffffff !important;
                             font-weight: 700 !important;
+                        }
+
+                        /* Un solo botón de salir en la tarjeta de bienvenida. */
+                        .fi-account-widget .fi-icon-btn {
+                            display: none !important;
+                        }
+
+                        @media (max-width: 639px) {
+                            .fi-account-widget .fi-icon-btn {
+                                display: inline-flex !important;
+                            }
+
+                            .fi-account-widget .fi-btn {
+                                display: none !important;
+                            }
                         }
 
                         /* Botón de ojito (Mostrar / Ocultar Contraseña) */
@@ -200,6 +215,6 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make());
+            ->plugin(FilamentFullCalendarPlugin::make());
     }
 }

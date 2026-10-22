@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\LiquidacionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Liquidacion extends Model
 {
-    /** @use HasFactory<\Database\Factories\LiquidacionFactory> */
+    /** @use HasFactory<LiquidacionFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -31,6 +32,8 @@ class Liquidacion extends Model
         'salud_porcentaje',
         'monto_salud',
         'monto_cesantia',
+        'sis_porcentaje',
+        'monto_sis',
         'total_descuentos_legales',
         'otros_descuentos',
         'total_descuentos',

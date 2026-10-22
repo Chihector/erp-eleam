@@ -123,6 +123,37 @@ class LibroRemuneracionesTest extends TestCase
         $this->assertStringNotContainsString('Pérez', $csv);
     }
 
+    public function test_neutraliza_formulas_y_escapa_separadores_en_el_csv()
+    {
+        $trabajador = Trabajador::create([
+            'rut' => '33333333-3',
+            'nombres' => '=1+1',
+            'apellidos' => '@SUM(A1:A2)',
+            'cargo' => 'Auxiliar; Turno',
+            'afp' => 'Modelo',
+            'sistema_salud' => 'Fonasa',
+            'fecha_ingreso' => '2020-01-01',
+        ]);
+
+        Contrato::create([
+            'trabajador_id' => $trabajador->id,
+            'sueldo_base' => 600000,
+            'tipo_contrato' => 'Indefinido',
+            'horas_semanales' => 45,
+            'fecha_inicio' => '2020-01-01',
+        ]);
+
+        $this->crearLiquidacion($trabajador, 10, 2026, 738400);
+
+        $csv = app(LibroRemuneracionesService::class)->generarCsv(10, 2026);
+
+        // Las fórmulas se neutralizan con apóstrofo y el separador se entrecomilla.
+        $this->assertStringContainsString(
+            '33333333-3;\'=1+1;\'@SUM(A1:A2);"Auxiliar; Turno";',
+            $csv,
+        );
+    }
+
     public function test_sin_liquidaciones_devuelve_solo_el_encabezado()
     {
         $servicio = app(LibroRemuneracionesService::class);

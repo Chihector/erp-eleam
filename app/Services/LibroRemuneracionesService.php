@@ -51,19 +51,19 @@ class LibroRemuneracionesService
     {
         $liquidaciones = $this->liquidacionesDelPeriodo($mes, $anio);
 
-        $lineas = [implode(';', self::COLUMNAS)];
+        $lineas = [implode(';', array_map($this->texto(...), self::COLUMNAS))];
 
         foreach ($liquidaciones as $liquidacion) {
             $trabajador = $liquidacion->trabajador;
             $contrato = $trabajador->contratos->sortByDesc('fecha_inicio')->first();
 
             $lineas[] = implode(';', [
-                $trabajador->rut,
-                $trabajador->nombres,
-                $trabajador->apellidos,
-                $trabajador->cargo,
-                $contrato?->tipo_contrato ?? '',
-                $trabajador->fecha_ingreso?->format('d/m/Y') ?? '',
+                $this->texto($trabajador->rut),
+                $this->texto($trabajador->nombres),
+                $this->texto($trabajador->apellidos),
+                $this->texto($trabajador->cargo),
+                $this->texto($contrato?->tipo_contrato),
+                $this->texto($trabajador->fecha_ingreso?->format('d/m/Y')),
                 (int) $liquidacion->dias_trabajados,
                 $this->monto($liquidacion->sueldo_base),
                 $this->monto($liquidacion->gratificacion),
@@ -117,5 +117,27 @@ class LibroRemuneracionesService
     private function monto(mixed $valor): string
     {
         return (string) (int) round((float) $valor);
+    }
+
+    /**
+     * Escapa un campo de texto para CSV y neutraliza fórmulas de Excel.
+     *
+     * Un nombre o cargo que empiece con =, +, - o @ podría ejecutarse como
+     * fórmula al abrir el archivo. Se antepone un apóstrofo y, si el valor
+     * contiene el separador, comillas o saltos de línea, se entrecomilla.
+     */
+    private function texto(?string $valor): string
+    {
+        $valor = (string) $valor;
+
+        if ($valor !== '' && in_array($valor[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            $valor = "'".$valor;
+        }
+
+        if (preg_match('/[;"\r\n]/', $valor) === 1) {
+            $valor = '"'.str_replace('"', '""', $valor).'"';
+        }
+
+        return $valor;
     }
 }

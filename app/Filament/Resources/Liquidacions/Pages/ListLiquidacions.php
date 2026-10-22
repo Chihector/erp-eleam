@@ -27,7 +27,7 @@ class ListLiquidacions extends ListRecords
                 ->icon('heroicon-o-calculator')
                 ->color('primary')
                 ->modalHeading('Calcular Liquidaciones de Sueldo')
-                ->modalDescription('Genera y calcula automáticamente las liquidaciones mensuales con la normativa legal chilena (Gratificación legal, Fonasa/Isapre, AFP y Seguro de Cesantía).')
+                ->modalDescription('Genera un borrador de liquidaciones con los parámetros y datos previsionales registrados. La verificación de UF, UTM, sueldo mínimo, topes y SIS es responsabilidad de una persona antes de pagar.')
                 ->form([
                     SelectTrabajador::make()
                         ->placeholder('Todos los trabajadores con contrato activo')
@@ -74,19 +74,29 @@ class ListLiquidacions extends ListRecords
                     $diasTrabajados = (int) $data['dias_trabajados'];
                     $trabajadorId = $data['trabajador_id'] ?? null;
 
-                    // Asegurar parámetros legales para el período
-                    ParametroLegal::firstOrCreate(
-                        ['mes' => $mes, 'anio' => $anio],
-                        [
-                            'valor_uf' => 38000,
-                            'valor_utm' => 67000,
-                            'sueldo_minimo' => 500000,
-                            'tope_imponible_afp' => 84.3,
-                            'tope_imponible_ips' => 60.0,
-                            'tope_imponible_cesantia' => 126.6,
-                            'porcentaje_sis' => 1.49,
-                        ]
-                    );
+                    // No se inventan parámetros: deben existir y estar revisados.
+                    $parametro = ParametroLegal::query()
+                        ->where('mes', $mes)
+                        ->where('anio', $anio)
+                        ->first();
+
+                    if (! $parametro) {
+                        Notification::make()
+                            ->title('Faltan los parámetros legales del período '.str_pad($mes, 2, '0', STR_PAD_LEFT)."/{$anio}.")
+                            ->body('Ve a Configuración > Parámetros Legales y usa "Actualizar desde mindicador.cl" antes de generar liquidaciones.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    if (! $parametro->estaVerificado()) {
+                        Notification::make()
+                            ->title('Los parámetros del período aún no están verificados.')
+                            ->body('Puedes generar un borrador, pero un responsable debe revisar UF, UTM, sueldo mínimo, topes y SIS antes de pagar.')
+                            ->warning()
+                            ->send();
+                    }
 
                     $query = Trabajador::query();
                     if ($trabajadorId) {
@@ -105,17 +115,15 @@ class ListLiquidacions extends ListRecords
 
                     $service = new RemuneracionService;
                     $generadas = 0;
-                    $sinContrato = [];
+                    $errores = [];
 
                     foreach ($trabajadores as $trabajador) {
-                        if (! $trabajador->contratos()->exists()) {
-                            $sinContrato[] = "{$trabajador->nombres} {$trabajador->apellidos}";
-
-                            continue;
+                        try {
+                            $service->calcularLiquidacion($trabajador, $mes, $anio, $diasTrabajados);
+                            $generadas++;
+                        } catch (\Throwable $e) {
+                            $errores[] = "{$trabajador->nombres} {$trabajador->apellidos}: {$e->getMessage()}";
                         }
-
-                        $service->calcularLiquidacion($trabajador, $mes, $anio, $diasTrabajados);
-                        $generadas++;
                     }
 
                     if ($generadas > 0) {
@@ -125,11 +133,12 @@ class ListLiquidacions extends ListRecords
                             ->send();
                     }
 
-                    if (count($sinContrato) > 0) {
+                    if (count($errores) > 0) {
                         Notification::make()
-                            ->title('Trabajadores sin contrato registrado')
-                            ->body('No se pudo calcular para: '.implode(', ', $sinContrato).'. Deben tener un contrato registrado con sueldo base.')
+                            ->title('Trabajadores que no se pudieron liquidar')
+                            ->body(implode(' · ', $errores))
                             ->warning()
+                            ->persistent()
                             ->send();
                     }
                 }),
