@@ -27,16 +27,32 @@ class LiquidacionPolicy
 
     public function update(User $user, Liquidacion $record): bool
     {
-        return $this->puedeGestionar($user, ['contador']);
+        // Una liquidación cerrada es inmutable hasta que un administrador
+        // la reabra con un motivo registrado.
+        return ! $record->cerrada
+            && $this->puedeGestionar($user, ['contador']);
     }
 
     public function delete(User $user, Liquidacion $record): bool
     {
-        return $this->puedeGestionar($user, ['contador']);
+        return ! $record->cerrada
+            && $this->puedeGestionar($user, ['contador']);
     }
 
     public function deleteAny(User $user): bool
     {
         return $this->puedeGestionar($user, ['contador']);
+    }
+
+    public function cerrar(User $user, Liquidacion $record): bool
+    {
+        return ! $record->cerrada
+            && $this->puedeGestionar($user, ['contador']);
+    }
+
+    public function reabrir(User $user, Liquidacion $record): bool
+    {
+        return $record->cerrada
+            && $this->soloAdministrador($user);
     }
 }

@@ -123,6 +123,49 @@ class ParametroLegalServiceTest extends TestCase
         app(ParametroLegalService::class)->actualizar(1, 2027, 553553);
     }
 
+    public function test_acepta_valores_manuales_sin_consultar_mindicador(): void
+    {
+        Http::fake();
+
+        $parametro = app(ParametroLegalService::class)->actualizar(
+            10,
+            2026,
+            553553,
+            41057.20,
+            72151,
+        );
+
+        Http::assertNothingSent();
+
+        $this->assertSame(41057.20, $parametro->valor_uf);
+        $this->assertSame(72151, $parametro->valor_utm);
+        $this->assertSame(553553, $parametro->sueldo_minimo);
+        $this->assertSame('manual', $parametro->origen);
+        $this->assertNull($parametro->fuente_url);
+    }
+
+    public function test_el_comando_acepta_formato_chileno_de_uf_y_utm(): void
+    {
+        Http::fake();
+
+        $this->artisan('eleam:parametros-actualizar', [
+            '--mes' => 10,
+            '--anio' => 2026,
+            '--uf' => '41.057,20',
+            '--utm' => '72.151',
+            '--sueldo-minimo' => 553553,
+        ])->assertSuccessful();
+
+        Http::assertNothingSent();
+
+        $parametro = ParametroLegal::where('mes', 10)->where('anio', 2026)->firstOrFail();
+
+        $this->assertSame(41057.20, $parametro->valor_uf);
+        $this->assertSame(72151, $parametro->valor_utm);
+        $this->assertSame(553553, $parametro->sueldo_minimo);
+        $this->assertSame('manual', $parametro->origen);
+    }
+
     public function test_conserva_los_topes_del_periodo_existente(): void
     {
         ParametroLegal::create([

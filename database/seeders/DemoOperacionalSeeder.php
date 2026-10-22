@@ -28,7 +28,9 @@ class DemoOperacionalSeeder extends Seeder
             [
                 // Referencia usada solo si el período no existe. No sobrescribe
                 // parámetros reales ya cargados o verificados.
-                'valor_uf' => 41199.85,
+                // UF de referencia para remuneraciones de octubre de 2026:
+                // valor al 30/09/2026 (último día del mes anterior).
+                'valor_uf' => 41057.20,
                 'valor_utm' => 72151,
                 'sueldo_minimo' => 553553,
                 'tope_imponible_afp' => 84.3,

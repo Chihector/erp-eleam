@@ -14,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Utilities\Get;
 
 class ListLiquidacions extends ListRecords
 {
@@ -59,19 +60,35 @@ class ListLiquidacions extends ListRecords
                         ->default(now()->year)
                         ->required(),
 
-                    TextInput::make('dias_trabajados')
+                    Select::make('origen_dias')
                         ->label('Días Trabajados')
+                        ->options([
+                            'licencias' => 'Mes completo menos licencias médicas',
+                            'asistencia' => 'Según asistencias registradas',
+                            'manual' => 'Ingresar manualmente',
+                        ])
+                        ->default('licencias')
+                        ->live()
+                        ->required()
+                        ->helperText('El modo automático descuenta las licencias no rechazadas y, si se elige, cuenta los días con marca de entrada.'),
+
+                    TextInput::make('dias_trabajados')
+                        ->label('Días (modo manual)')
                         ->numeric()
                         ->default(30)
-                        ->minValue(1)
+                        ->minValue(0)
                         ->maxValue(30)
-                        ->required()
+                        ->required(fn (Get $get): bool => $get('origen_dias') === 'manual')
+                        ->visible(fn (Get $get): bool => $get('origen_dias') === 'manual')
                         ->helperText('Estándar legal chileno de 30 días para mes completo.'),
                 ])
                 ->action(function (array $data) {
                     $mes = (int) $data['mes'];
                     $anio = (int) $data['anio'];
-                    $diasTrabajados = (int) $data['dias_trabajados'];
+                    $origenDias = (string) ($data['origen_dias'] ?? 'licencias');
+                    $diasTrabajados = $origenDias === 'manual'
+                        ? (int) ($data['dias_trabajados'] ?? 30)
+                        : null;
                     $trabajadorId = $data['trabajador_id'] ?? null;
 
                     // No se inventan parámetros: deben existir y estar revisados.
@@ -119,7 +136,9 @@ class ListLiquidacions extends ListRecords
 
                     foreach ($trabajadores as $trabajador) {
                         try {
-                            $service->calcularLiquidacion($trabajador, $mes, $anio, $diasTrabajados);
+                            $service->calcularLiquidacion($trabajador, $mes, $anio, $diasTrabajados, [
+                                'origen_dias' => $origenDias,
+                            ]);
                             $generadas++;
                         } catch (\Throwable $e) {
                             $errores[] = "{$trabajador->nombres} {$trabajador->apellidos}: {$e->getMessage()}";

@@ -56,6 +56,11 @@ class Trabajador extends Model implements Auditable
         return $this->hasMany(LicenciaMedica::class);
     }
 
+    public function asistencias()
+    {
+        return $this->hasMany(Asistencia::class);
+    }
+
     public function finiquitos()
     {
         return $this->hasMany(Finiquito::class);

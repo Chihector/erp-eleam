@@ -19,9 +19,11 @@ class ParametroLegalSeeder extends Seeder
                 'anio' => $anio,
             ],
             [
-                // Valores de referencia al 2026-10-22. El comando
-                // eleam:parametros-actualizar los reemplaza desde mindicador.cl.
-                'valor_uf' => 41199.85,
+                // Valores de referencia para remuneraciones de octubre de
+                // 2026: UF al 30/09/2026 y UTM del mes. El comando
+                // eleam:parametros-actualizar los reemplaza desde mindicador.cl
+                // o acepta valores manuales con --uf/--utm.
+                'valor_uf' => 41057.20,
                 'valor_utm' => 72151,
                 'sueldo_minimo' => app(ParametroLegalService::class)->sueldoMinimoVigente($mes, $anio),
                 'tope_imponible_afp' => config('legal.topes.afp'),

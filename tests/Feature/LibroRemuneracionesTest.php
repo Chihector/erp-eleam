@@ -98,7 +98,7 @@ class LibroRemuneracionesTest extends TestCase
 
         // La fila completa lleva todas las columnas de la liquidación.
         $this->assertEquals(
-            '11111111-1;Ana;González;Enfermera;Indefinido;01/01/2020;30;600000;150000;750000;50000;50000;0;100000;850000;66000;42000;3600;111600;0;111600;738400',
+            '11111111-1;Ana;González;Enfermera;Indefinido;01/01/2020;30;manual;600000;150000;750000;0;50000;50000;0;100000;850000;66000;42000;3600;0;111600;0;0;0;111600;738400',
             $lineas[1],
         );
     }

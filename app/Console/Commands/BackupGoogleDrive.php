@@ -48,8 +48,15 @@ class BackupGoogleDrive extends Command
 
         // 1. Base de datos SQLite
         if ($todo || $soloDb || (! $soloDb && ! $soloStorage)) {
-            $dbPath = database_path('database.sqlite');
-            if (File::exists($dbPath)) {
+            $dbPath = $this->rutaBaseDatosSqlite();
+
+            if ($dbPath === null) {
+                $this->warn('El motor de base de datos configurado no es SQLite. Este comando solo puede respaldar SQLite; para PostgreSQL usa pg_dump o el respaldo del proveedor.');
+
+                if ($soloDb || (! $soloStorage && ! $todo)) {
+                    return Command::FAILURE;
+                }
+            } elseif (File::exists($dbPath)) {
                 $destino = "backup_{$timestamp}_database.sqlite";
                 $archivosASubir[] = [
                     'origen' => $dbPath,
@@ -59,6 +66,10 @@ class BackupGoogleDrive extends Command
                 ];
             } else {
                 $this->warn("Base de datos no encontrada en: {$dbPath}");
+
+                if ($soloDb || (! $soloStorage && ! $todo)) {
+                    return Command::FAILURE;
+                }
             }
         }
 
@@ -137,6 +148,33 @@ class BackupGoogleDrive extends Command
         $this->info("🎉 Backup completado: {$subidos}/".count($archivosASubir).' archivos subidos.');
 
         return $subidos === count($archivosASubir) ? Command::SUCCESS : Command::FAILURE;
+    }
+
+    /**
+     * Ruta del archivo SQLite de la conexión activa, o null si el motor no es
+     * SQLite. Así el respaldo usa la misma base que la aplicación y no una
+     * ruta fija que puede no existir en producción.
+     */
+    private function rutaBaseDatosSqlite(): ?string
+    {
+        $conexion = config('database.default');
+        $driver = config("database.connections.{$conexion}.driver");
+
+        if ($driver !== 'sqlite') {
+            return null;
+        }
+
+        $ruta = config("database.connections.{$conexion}.database");
+
+        if (! is_string($ruta) || trim($ruta) === '' || $ruta === ':memory:') {
+            return null;
+        }
+
+        $esAbsoluta = str_starts_with($ruta, '/')
+            || str_starts_with($ruta, '\\')
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $ruta) === 1;
+
+        return $esAbsoluta ? $ruta : base_path($ruta);
     }
 
     private function crearZip(string $origen, string $destino): void

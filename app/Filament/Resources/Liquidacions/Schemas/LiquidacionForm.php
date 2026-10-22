@@ -54,12 +54,27 @@ class LiquidacionForm
                         TextInput::make('dias_trabajados')
                             ->label('Días Trabajados')
                             ->numeric()
+                            ->minValue(0)
+                            ->maxValue(30)
                             ->default(30)
+                            ->required(),
+
+                        Select::make('origen_dias')
+                            ->label('Origen de los Días')
+                            ->options([
+                                'manual' => 'Ingresados manualmente',
+                                'licencias' => 'Mes completo menos licencias',
+                                'asistencia' => 'Según asistencias registradas',
+                            ])
+                            ->default('manual')
                             ->required(),
 
                         Toggle::make('cerrada')
                             ->label('Liquidación Cerrada')
-                            ->default(false),
+                            ->default(false)
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('El cierre y la reapertura se realizan con las acciones del listado.'),
                     ]),
 
                 Section::make('Haberes Imponibles')
@@ -82,6 +97,13 @@ class LiquidacionForm
                             ->numeric()
                             ->prefix('$')
                             ->required(),
+
+                        TextInput::make('renta_liquida_imponible')
+                            ->label('Renta Líquida Imponible')
+                            ->numeric()
+                            ->prefix('$')
+                            ->default(0)
+                            ->helperText('Total imponible menos AFP, salud y cesantía. Base del IUSC.'),
                     ]),
 
                 Section::make('Haberes No Imponibles')
@@ -164,22 +186,45 @@ class LiquidacionForm
                             ->default(0)
                             ->required(),
 
+                        TextInput::make('impuesto_segunda_categoria')
+                            ->label('Impuesto Único 2ª Categoría')
+                            ->numeric()
+                            ->prefix('$')
+                            ->default(0)
+                            ->helperText('Se calcula sobre la renta líquida imponible con la tabla SII del período.'),
+
                         TextInput::make('total_descuentos_legales')
                             ->label('Total Descuentos Legales')
                             ->numeric()
                             ->prefix('$')
-                            ->required(),
+                            ->required()
+                            ->helperText('Incluye AFP, salud, cesantía e impuesto único.'),
                     ]),
 
                 Section::make('Totales Finales')
                     ->columns(['sm' => 1, 'md' => 3])
                     ->schema([
-                        TextInput::make('otros_descuentos')
-                            ->label('Otros Descuentos')
+                        TextInput::make('descuento_anticipo')
+                            ->label('Anticipo')
                             ->numeric()
                             ->prefix('$')
                             ->default(0)
                             ->required(),
+
+                        TextInput::make('descuento_sindicato')
+                            ->label('Cuota Sindical')
+                            ->numeric()
+                            ->prefix('$')
+                            ->default(0)
+                            ->required(),
+
+                        TextInput::make('otros_descuentos')
+                            ->label('Otros Descuentos (total)')
+                            ->numeric()
+                            ->prefix('$')
+                            ->default(0)
+                            ->required()
+                            ->helperText('Incluye anticipo, cuota sindical y otros descuentos varios.'),
 
                         TextInput::make('total_descuentos')
                             ->label('Total Descuentos')

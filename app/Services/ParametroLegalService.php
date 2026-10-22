@@ -22,14 +22,28 @@ use Throwable;
  */
 class ParametroLegalService
 {
-    public function actualizar(int $mes, int $anio, ?int $sueldoMinimo = null): ParametroLegal
-    {
+    public function actualizar(
+        int $mes,
+        int $anio,
+        ?int $sueldoMinimo = null,
+        ?float $ufManual = null,
+        ?int $utmManual = null,
+    ): ParametroLegal {
         $this->validarPeriodo($mes, $anio);
 
-        $baseUrl = rtrim((string) config('legal.parametros_url'), '/');
+        if ($ufManual !== null && $ufManual <= 0) {
+            throw new RuntimeException('La UF debe ser un valor positivo.');
+        }
 
-        $utm = $this->obtenerUtm($baseUrl, $mes, $anio);
-        $uf = $this->obtenerUf($baseUrl, $mes, $anio);
+        if ($utmManual !== null && $utmManual <= 0) {
+            throw new RuntimeException('La UTM debe ser un valor positivo.');
+        }
+
+        $baseUrl = rtrim((string) config('legal.parametros_url'), '/');
+        $valoresManuales = $ufManual !== null || $utmManual !== null;
+
+        $utm = $utmManual ?? $this->obtenerUtm($baseUrl, $mes, $anio);
+        $uf = $ufManual ?? $this->obtenerUf($baseUrl, $mes, $anio);
         $sueldo = $sueldoMinimo ?? $this->sueldoMinimoVigente($mes, $anio);
 
         if ($sueldo < 1) {
@@ -58,8 +72,8 @@ class ParametroLegalService
                 'tope_imponible_ips' => $existente?->tope_imponible_ips ?? $topes['ips'],
                 'tope_imponible_cesantia' => $existente?->tope_imponible_cesantia ?? $topes['cesantia'],
                 'porcentaje_sis' => $existente?->porcentaje_sis ?? config('legal.sis'),
-                'origen' => 'mindicador.cl',
-                'fuente_url' => $baseUrl,
+                'origen' => $valoresManuales ? 'manual' : 'mindicador.cl',
+                'fuente_url' => $valoresManuales ? null : $baseUrl,
                 'actualizado_en' => now(),
                 // Un cambio de valores exige una nueva revisión humana.
                 'verificado_por_id' => $cambio ? null : $existente?->verificado_por_id,

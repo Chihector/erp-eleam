@@ -37,13 +37,19 @@
             <th>Cargo</th>
             <td>{{ $liquidacion->trabajador->cargo }}</td>
             <th>Días Trabajados</th>
-            <td>{{ $liquidacion->dias_trabajados }}</td>
+            <td>{{ $liquidacion->dias_trabajados }} ({{ match ($liquidacion->origen_dias) { 'licencias' => 'mes menos licencias', 'asistencia' => 'según asistencia', default => 'manual' } }})</td>
         </tr>
         <tr>
             <th>AFP</th>
             <td>{{ $liquidacion->afp_nombre }} ({{ $liquidacion->afp_porcentaje }}%)</td>
             <th>Salud</th>
             <td>{{ $liquidacion->salud_nombre }} ({{ $liquidacion->salud_porcentaje }}%)</td>
+        </tr>
+        <tr>
+            <th>Estado</th>
+            <td>{{ $liquidacion->cerrada ? 'CERRADA' : 'BORRADOR' }}</td>
+            <th>Valor UTM</th>
+            <td>${{ number_format((int) ($liquidacion->valor_utm_usado ?? 0), 0, ',', '.') }}</td>
         </tr>
     </table>
 
@@ -103,6 +109,10 @@
             <td>Seguro de Cesantía</td>
             <td class="right">${{ number_format($liquidacion->monto_cesantia, 0, ',', '.') }}</td>
         </tr>
+        <tr>
+            <td>Impuesto Único de Segunda Categoría</td>
+            <td class="right">${{ number_format($liquidacion->impuesto_segunda_categoria ?? 0, 0, ',', '.') }}</td>
+        </tr>
         <tr class="totals">
             <td>TOTAL DESCUENTOS LEGALES</td>
             <td class="right">${{ number_format($liquidacion->total_descuentos_legales, 0, ',', '.') }}</td>
@@ -118,8 +128,16 @@
             <th colspan="2" class="section-title">OTROS DESCUENTOS</th>
         </tr>
         <tr>
-            <td>Varios (Anticipos, etc.)</td>
-            <td class="right">${{ number_format($liquidacion->otros_descuentos, 0, ',', '.') }}</td>
+            <td>Anticipo</td>
+            <td class="right">${{ number_format($liquidacion->descuento_anticipo ?? 0, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td>Cuota Sindical</td>
+            <td class="right">${{ number_format($liquidacion->descuento_sindicato ?? 0, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td>Otros descuentos varios</td>
+            <td class="right">${{ number_format(max(0, ($liquidacion->otros_descuentos ?? 0) - ($liquidacion->descuento_anticipo ?? 0) - ($liquidacion->descuento_sindicato ?? 0)), 0, ',', '.') }}</td>
         </tr>
         <tr class="totals">
             <td style="background-color: #f4f4f4;">TOTAL DESCUENTOS</td>
