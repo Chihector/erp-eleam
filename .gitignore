@@ -26,3 +26,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .aider*
+
+# Credenciales de Google Drive (nunca subir al repo)
+google-drive-credentials.json
