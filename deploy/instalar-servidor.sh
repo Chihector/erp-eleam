@@ -61,6 +61,7 @@ apt-get install -y -qq \
     nginx \
     postgresql \
     "php$PHP_VER-fpm" \
+    "php$PHP_VER-cli" \
     "php$PHP_VER-pgsql" \
     "php$PHP_VER-mbstring" \
     "php$PHP_VER-xml" \
@@ -177,6 +178,18 @@ azul "6/9 Ajustando permisos..."
 chown -R www-data:www-data "$APP_DIR"
 chmod -R ug+rwx storage bootstrap/cache
 ok "Permisos correctos (www-data)."
+
+# ── 6b. Tareas programadas (scheduler y respaldo diario) ─────────────────────
+# Laravel necesita schedule:run cada minuto. Sin esto no se envían
+# notificaciones, reportes ni respaldos automáticos.
+cat > /etc/cron.d/eleam <<CRON
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * www-data cd $APP_DIR && /usr/bin/php$PHP_VER artisan schedule:run >> $APP_DIR/storage/logs/scheduler-cron.log 2>&1
+0 3 * * * root bash $APP_DIR/deploy/respaldar.sh >> /var/log/eleam-respaldo.log 2>&1
+CRON
+chmod 644 /etc/cron.d/eleam
+ok "Scheduler de Laravel y respaldo diario programados (cron)."
 
 # ── 7. nginx ─────────────────────────────────────────────────────────────────
 azul "7/9 Configurando nginx..."
