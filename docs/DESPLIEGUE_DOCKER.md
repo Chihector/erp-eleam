@@ -31,8 +31,10 @@ la migración automática de los datos existentes.
 En la carpeta del proyecto:
 
 ```bash
-copy .env.production.example .env.production
+cp .env.production.example .env.production
 ```
+
+> En Windows/PowerShell usa `copy .env.production.example .env.production`.
 
 Abre `.env.production` con un editor y completa **dos** valores:
 
@@ -97,20 +99,21 @@ Si la base está vacía (instalación nueva), crea los datos mínimos:
 docker compose --env-file .env.production exec app php artisan db:seed --force
 ```
 
-Y luego crea tu usuario administrador desde la interfaz o con Tinker:
+Y luego crea tu usuario administrador con el comando seguro, que genera una
+contraseña aleatoria y la muestra una sola vez:
 
 ```bash
-docker compose --env-file .env.production exec app php artisan tinker
+docker compose --env-file .env.production exec app \
+    php artisan eleam:admin-crear admin@eleam.cl \
+    --nombre=Administrador --apellido=Sistema --rut=11111111-1
 ```
 
-```php
-$u = \App\Models\User::create([
-    'nombre' => 'Administrador', 'apellido' => 'General',
-    'rut' => '11111111-1', 'email' => 'admin@eleam.cl',
-    'password' => 'UNA-CLAVE-SEGURA-AQUI',
-]);
-$u->assignRole('administrador');
-```
+> 🔔 **Tareas programadas:** el contenedor `app` no ejecuta el scheduler. Para
+> notificaciones, reportes y mantenciones agrega un servicio que ejecute
+> `php artisan schedule:work` con la misma imagen y variables de entorno, o
+> programa `docker compose exec app php artisan schedule:run` cada minuto en el
+> servidor. El respaldo a Google Drive del sistema solo cubre SQLite; con
+> PostgreSQL usa `pg_dump` y copia el respaldo fuera del servidor.
 
 ---
 

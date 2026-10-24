@@ -184,14 +184,16 @@ Permite llevar el control del flujo de efectivo del establecimiento.
 ## 📄 7. Módulo de Remuneraciones y Liquidaciones de Sueldo (PDF)
 
 El sistema calcula las liquidaciones con reglas de apoyo (gratificación legal,
-topes imponibles, AFP y salud por trabajador, seguro de cesantía y SIS
-informativo del empleador). La salud usa el tope imponible de 60 UF para el
-mínimo legal de Fonasa/Isapre. **No reemplaza la revisión laboral/contable** y
-todavía no calcula el impuesto único de segunda categoría.
+topes imponibles, AFP y salud por trabajador, seguro de cesantía, SIS
+informativo del empleador e impuesto único de segunda categoría). La salud usa
+el tope imponible de 60 UF para el mínimo legal de Fonasa/Isapre. **No
+reemplaza la revisión laboral/contable.**
 
-> **Límites actuales:** los días trabajados se ingresan manualmente (30 por
-> defecto); el sistema no descuenta solo las licencias o ausencias. Antes de
-> pagar, revisa esos días y los resultados con el responsable del ELEAM.
+> **Límites actuales:** los días trabajados pueden calcularse como mes completo
+> menos licencias médicas no rechazadas, según asistencias registradas o
+> ingresarse manualmente. Las licencias **Pendientes** también descuentan días.
+> Antes de pagar, revisa esos días, la tabla del IUSC, la salud Isapre y los
+> resultados con el responsable del ELEAM.
 
 ### A. Actualizar y verificar los parámetros legales del período
 1. Entra como **Administrador** y ve a **Configuración > Parámetros Legales**.
@@ -216,7 +218,7 @@ todavía no calcula el impuesto único de segunda categoría.
 3. Se abrirá una ventana donde puedes elegir:
    - **Mes:** Selecciona el mes a liquidar (ej: Octubre).
    - **Año:** Año correspondiente (ej: 2026).
-   - **Días Trabajados:** 30 días para mes completo (o ajusta si hubo licencias/ausencias).
+   - **Días Trabajados:** elige **mes completo menos licencias** (predeterminado), **según asistencias registradas** o **ingreso manual**. En modo manual, usa 30 para un mes completo.
    - **Trabajador (Opcional):** Déjalo en blanco para **generar la liquidación de todos los trabajadores con contrato a la vez**, o elige a un trabajador puntual.
 4. Haz clic en **Generar**.
 5. El sistema procesará los cálculos y creará las liquidaciones al instante. Si
@@ -231,14 +233,31 @@ todavía no calcula el impuesto único de segunda categoría.
    - Detalle de **Haberes Imponibles** (Sueldo base y Gratificación legal).
    - Detalle de **Haberes No Imponibles** (Movilización, Colación, Cargas familiares).
    - Desglose de **Descuentos Legales**: AFP con la tasa del trabajador, Salud
-     (Fonasa 7 % o el plan Isapre) y Seguro de Cesantía.
+     (Fonasa 7 % o el plan Isapre), Seguro de Cesantía e Impuesto único de
+     segunda categoría.
    - **SIS del empleador** como línea informativa: no se descuenta del líquido.
    - Monto final del **Sueldo Líquido a Pagar** en números y texto.
    - Registro de los turnos cumplidos en el período.
    - Líneas de firma formal del Empleador y del Trabajador con su RUT.
 4. Puedes imprimirlo o descargarlo directamente a tu computadora para firma y archivo.
 
-### D. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
+### D. Cerrar y reabrir una liquidación
+El cierre convierte la liquidación en un documento inmutable: no se puede editar
+ni recalcular. Solo un **Administrador** puede reabrirla, dejando usuario, fecha
+y motivo registrados.
+
+1. Verifica que los parámetros legales del período estén marcados como
+   verificados.
+2. En la fila de la liquidación, pulsa **"Cerrar"** y confirma. Si los
+   parámetros cambiaron después del cálculo, el sistema rechazará el cierre y
+   pedirá recalcular.
+3. Para corregir un error, un administrador pulsa **"Reabrir"**, escribe el
+   motivo (mínimo 10 caracteres) y confirma.
+4. Con la liquidación reabierta, corrige los datos y vuelve a generarla o
+   editarla. El cierre anterior y el motivo de la reapertura quedan en la
+   auditoría.
+
+### E. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
 1. En el menú, ve a **Liquidaciones**.
 2. Haz clic en el botón superior **"Libro de Remuneraciones DT"** (icono de descarga).
 3. Elige el **Mes** y **Año** del período que quieres exportar.
@@ -415,6 +434,11 @@ El PDF se guarda en `storage/app/reportes/`. La opción `--email` envía el repo
 
 ### D. Respaldo a Google Drive
 El respaldo incluye la base SQLite, `storage/` y una copia del `.env` **sin secretos**. Para configurarlo:
+
+> ⚠️ **Solo SQLite:** si el sistema usa PostgreSQL, este comando no respalda la
+> base de datos y falla de forma explícita al pedir `--all` o `--database`.
+> En ese caso usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo a un
+> destino externo.
 1. Crea una cuenta de servicio en Google Cloud y descarga su archivo JSON.
 2. Guarda el JSON fuera de Git; por ejemplo, en la raíz como `google-drive-credentials.json` (ya está en `.gitignore`).
 3. Crea una carpeta en Google Drive y copia su ID.
@@ -450,7 +474,7 @@ En local, déjalo corriendo en una terminal aparte:
 ```bash
 php artisan schedule:work
 ```
-En producción, configura el cron de Laravel (`php artisan schedule:run` cada minuto). También puedes ejecutar las mantenciones a mano:
+En producción, el instalador de servidor crea `/etc/cron.d/eleam` con el scheduler y el respaldo diario. Si instalaste de otra forma, configura el cron de Laravel (`php artisan schedule:run` cada minuto). También puedes ejecutar las mantenciones a mano:
 ```bash
 php artisan log:clear
 php artisan db:optimize

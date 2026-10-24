@@ -126,7 +126,9 @@ sudo bash /var/www/eleam/deploy/respaldar.sh
 
 Guarda la base de datos y los archivos subidos en `/var/backups/eleam/`.
 
-**Programar el respaldo automático diario** (ejecutar una sola vez):
+**Respaldo automático diario:** el instalador ya crea `/etc/cron.d/eleam`
+con el scheduler de Laravel y este respaldo a las 3:00 AM. Si instalaste con una
+versión anterior, agrégalo manualmente:
 
 ```bash
 sudo crontab -e
@@ -139,6 +141,14 @@ Agrega esta línea al final y guarda:
 ```
 
 Esto respalda todos los días a las 3:00 AM y borra respaldos de más de 30 días.
+El respaldo usa `pg_dump`; el comando `backup:google-drive` solo respalda SQLite.
+Copia `/var/backups/eleam/` a un destino externo y prueba una restauración.
+
+Verifica que el scheduler quede registrado:
+
+```bash
+sudo -u www-data php artisan schedule:list
+```
 
 ### Crear más usuarios administradores
 

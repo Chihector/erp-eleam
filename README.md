@@ -7,7 +7,7 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 ## 🚀 Stack Tecnológico
 
 - **Backend:** Laravel 12 (PHP 8.2+)
-- **Panel Administrativo:** FilamentPHP 3 / 5
+- **Panel Administrativo:** FilamentPHP 5
 - **Base de Datos:** SQLite (optimizado con modo WAL y transacciones concurrentes)
 - **Calendario Interactivo:** FullCalendar (`saade/filament-fullcalendar`)
 - **Gestión de Permisos:** Spatie Laravel Permission
@@ -70,10 +70,14 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
   - AFP con la tasa propia de cada trabajador (`trabajadores.afp_tasa`) o la tasa de referencia configurada.
   - Salud según el trabajador: Fonasa 7% o plan Isapre en UF, con mínimo legal de 7% y tope imponible de 60 UF.
   - Seguro de Cesantía (0.6% trabajador para contratos indefinidos).
+  - **Impuesto único de segunda categoría** sobre la renta líquida imponible, con la tabla SII 2026 configurable en `config/legal.php`.
+  - Descuentos adicionales (anticipo, sindicato y otros) y haberes no imponibles; el cálculo se rechaza si los descuentos superan los haberes.
   - **SIS como aporte informativo del empleador**, sin descontarlo del líquido.
+- [x] **Origen de los días trabajados:** mes completo menos licencias médicas no rechazadas, días con marca de asistencia o ingreso manual.
+- [x] **Cierre y reapertura con trazabilidad:** una liquidación cerrada no puede recalcularse; el administrador puede reabrirla con un motivo obligatorio, registrando usuario y fecha. El cierre exige parámetros legales verificados.
 - [x] **Generador masivo e individual:** Botón *"Generar Liquidación Mensual"* en el panel; si faltan datos previsionales de un trabajador, se informa ese caso y se continúa con el resto.
 - [x] **Exportación a PDF:** Emisión y descarga de liquidaciones en PDF con detalle de haberes, descuentos, SIS del empleador, desglose de turnos y líneas de firma.
-- [ ] Pendiente de revisión laboral/contable: impuesto único de segunda categoría, otros descuentos y descuento automático de licencias/ausencias. Los días trabajados se ingresan manualmente.
+- [ ] Pendiente de validación laboral/contable: contrastar el IUSC, la salud Isapre, el tratamiento de licencias/ausencias, los topes y la gratificación con un responsable. Que la fórmula esté implementada y con pruebas no constituye certificación legal.
 
 ### ✅ Etapa 7: Experiencia Móvil y Autenticación Flexible
 - [x] **Inicio de sesión híbrido (Correo O RUT):** El usuario puede ingresar usando su correo electrónico o su RUT chileno (con o sin puntos/guión).
@@ -131,8 +135,8 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 - [x] Cálculo eficiente del saldo de vacaciones, sin consultas N+1 en listados y widgets.
 - [x] Notificaciones diarias por correo y en base de datos: contratos por vencer (30/15/7/3/1 días), vacaciones acumuladas y licencias médicas por vencer o vencidas.
 - [x] Reportes PDF semanales y mensuales de notificaciones, con envío opcional a administradores.
-- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite.
-- [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`.
+- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite. **Solo respalda SQLite**: con PostgreSQL usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo fuera del servidor.
+- [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`. El instalador de servidor configura el cron de Laravel; en Docker o local hay que ejecutarlo aparte.
 - [x] Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos programados.
 
 ---
@@ -153,7 +157,7 @@ El scheduler envía notificaciones, genera reportes y ejecuta mantenciones. En u
 ```bash
 php artisan schedule:work
 ```
-En producción, en lugar de `schedule:work`, configura el cron de Laravel en el servidor. El respaldo a Google Drive solo se ejecuta si existen `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`.
+En producción, el instalador de servidor configura el cron de Laravel; si instalas de otra forma, agrégalo manualmente. El respaldo a Google Drive solo se ejecuta si existen `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID` y la base es SQLite.
 
 ### 🐳 Modo profesional con Docker + PostgreSQL
 
@@ -259,7 +263,7 @@ php artisan test --filter=NotificacionesDiariasTest
 php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test`. Última verificación: **103 pruebas aprobadas y 318 aserciones**.
+La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md).
 
 Si todavía no configuraste el entorno local, crea `.env` desde `.env.example`
 antes de ejecutar los tests. PHPUnit usa una clave de cifrado fija exclusiva

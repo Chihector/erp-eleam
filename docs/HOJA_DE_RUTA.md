@@ -17,27 +17,31 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 ### P0 — Cerrar antes de entregar
 
 - [x] Ejecutar la suite completa en SQLite en memoria y registrar el resultado:
-  resultado actualizado en esta revisión: **103 pruebas y 318 aserciones
-  aprobadas**. Incluye previsión por trabajador, SIS, permisos, dashboard,
+  **120 pruebas y 427 aserciones aprobadas** (verificación 2026-10-24). Incluye
+  previsión por trabajador, SIS, IUSC, cierre/reapertura, permisos, dashboard,
   notificaciones, reportes, respaldo simulado y CSV.
 - [ ] Confirmar con el usuario del negocio el alcance exacto de la entrega:
   demo, piloto interno o producción; qué módulos se usarán y quién los aprobará.
 - [ ] Obtener revisión laboral/contable de remuneraciones, licencias, vacaciones,
   finiquitos, parámetros legales y del CSV. No presentar las fórmulas actuales
   como certificación normativa.
-- [ ] Definir y probar el enlace entre licencias/asistencias y remuneraciones:
-  el cálculo actual usa los días trabajados que se ingresan manualmente y no
-  los descuenta automáticamente a partir de licencias o marcas de asistencia.
+- [x] Implementar el enlace entre licencias/asistencias y remuneraciones:
+  `RemuneracionService` calcula los días desde licencias no rechazadas, desde
+  asistencias registradas o permite el ingreso manual.
+- [ ] Validar con el responsable laboral/contable el tratamiento de licencias
+  pendientes, ausencias y el prorrateo por asistencia antes de pagar nómina real.
 - [x] Validar los descuentos previsionales básicos: `RemuneracionService` usa la
   tasa AFP y el sistema de salud del trabajador, aplica el plan Isapre con
   mínimo de 7 % y registra el SIS como aporte del empleador (no lo descuenta
   del líquido).
-- [ ] Implementar y validar el impuesto único de segunda categoría y otros
-  descuentos (anticipos, sindicatos, cargas familiares) antes de usar nómina
-  real para pagos.
-- [ ] Definir el flujo de cierre y reapertura de liquidaciones: hoy una
-  liquidación marcada como `cerrada` puede volver a recalcularse con el
-  generador mensual.
+- [x] Implementar el impuesto único de segunda categoría con la tabla SII 2026
+  y pruebas de cálculo, más descuentos adicionales (anticipo, sindicato y otros).
+- [ ] Validar con asesoría laboral/contable el IUSC, la salud Isapre, los topes y
+  la gratificación antes de usar nómina real para pagos.
+- [x] Implementar el flujo de cierre y reapertura de liquidaciones: el cierre
+  exige parámetros verificados y bloquea el recálculo; la reapertura es solo de
+  administrador y registra usuario, fecha y motivo. El generador rechaza
+  liquidaciones cerradas.
 - [x] Automatizar la actualización de UF y UTM desde mindicador.cl, con origen,
   fecha y verificación humana registrados; el sueldo mínimo se toma de una
   tabla de vigencia configurable.
@@ -50,8 +54,10 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 - [ ] Preparar un entorno de ensayo con el mismo motor de base de datos elegido
   para producción. Ejecutar migraciones, alta de administrador, flujos completos
   y una actualización desde una versión anterior.
-- [ ] Realizar y restaurar un respaldo de ensayo, incluyendo la base de datos y
-  archivos adjuntos. Registrar dónde se guardan y quién puede recuperarlos.
+- [ ] Realizar y restaurar un respaldo de ensayo, incluyendo la base PostgreSQL
+  y los archivos adjuntos, y copiarlo a un destino externo. Registrar dónde se
+  guarda y quién puede recuperarlo. El respaldo a Google Drive actual solo cubre
+  SQLite.
 - [ ] Sustituir las contraseñas de ejemplo, configurar secretos únicos, HTTPS,
   `APP_DEBUG=false`, correo/registro operativo y acceso restringido. Nunca usar
   contraseñas publicadas en documentación.
@@ -99,14 +105,19 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 ## Verificación de esta revisión
 
-- Repositorio: **limpio y unificado**. La copia local es `Erp eleam` y la
-  rama publicada es `master`; los worktrees auxiliares fueron eliminados.
-- Últimos commits: `d1a8c94` (parámetros legales, previsión y seguridad) y el
-  commit de integración de dashboard, notificaciones, reportes y respaldos.
+- Repositorio: **sincronizado con `origin/master` al inicio de esta revisión**.
+  La rama publicada es `master`; mantén una sola copia de trabajo canónica. Los
+  cambios de esta sesión quedaron en commits locales pendientes de publicar.
+- Últimos commits publicados: `38e6987` (tests completos y cierres de
+  remuneraciones), `7184ffc` (documentación) y `c28b05b` (Google Drive y tareas
+  programadas).
 - PHP disponible: 8.2.12; SQLite habilitado.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
-- Suite completa: **103 aprobadas, 318 aserciones**.
+- Suite completa: **120 aprobadas, 427 aserciones** (verificación 2026-10-24).
+- Se agregó GitHub Actions para ejecutar la suite en cada push o pull request.
+- Migraciones locales aplicadas, incluidas `notifications` y los campos P0 de
+  liquidaciones.
 - Pruebas nuevas relevantes:
   - `RemuneracionPrevisionalTest`: AFP propia, Isapre con plan y mínimo de 7 %,
     SIS fuera del líquido, contrato vigente y errores por datos faltantes.
@@ -121,13 +132,16 @@ operativos definidos y aceptación legal/contable documentada. No usar
     respeta el modo `--dry-run`.
   - `ComandosMantenimientoTest`: comandos programados, limpieza de logs,
     optimización, reporte PDF, envío por correo y respaldo simulado.
+  - `LiquidacionP0Test`: IUSC, descuentos adicionales, origen de días y
+    cierre/reapertura con permisos y trazabilidad.
+  - `EscenarioOperacionalDemoTest`, `PanelPaginasNuevasTest` y
+    `PilotoRemuneraciones2026Test`: flujo operativo y regresión del panel.
 - QA visual headless previa: `/admin`, `/admin/parametro-legals`,
   `/admin/trabajadors`, `/admin/gastos` y `/admin/liquidacions` responden 200,
   sin errores de consola ni requests fallidos. Un solo botón "Salir" visible en
   escritorio y móvil (390 px), sin desborde horizontal. El dashboard nuevo está
   cubierto además por `DashboardWidgetsTest`.
 - `vendor\bin\pint --dirty`: aplicado correctamente.
-- Migraciones legales y de notificaciones ejecutadas en la SQLite local.
 - Verificación de rutas: 41 rutas de administración registradas, incluidas las
   dos rutas PDF protegidas por autenticación y autorización.
 - La cuenta temporal de QA visual fue eliminada. Para entrar localmente,
@@ -136,10 +150,11 @@ operativos definidos y aceptación legal/contable documentada. No usar
   de datos sintéticos. Usa un RUT de fixture y el nombre
   `DEMO / NO ES PERSONA REAL`; no contiene datos personales reales. Los montos y
   parámetros son demostrativos, no certificación legal.
-- Riesgo vigente: el generador de liquidaciones recibe 30 días por defecto y no
-  deriva ausencias desde marcas ni licencias. Tampoco calcula impuesto único de
-  segunda categoría. Acordar ambos flujos con el área laboral antes de procesar
-  remuneraciones reales.
+- Riesgo vigente: la validación legal/contable (IUSC, salud Isapre, licencias,
+  ausencias, topes y gratificación) sigue pendiente. El modo asistencia prorratea
+  el sueldo mensual por días con marca; acordar esa regla antes de pagar. El
+  respaldo a Google Drive solo cubre SQLite; con PostgreSQL usar `pg_dump` y
+  probar una restauración completa.
 
 ## Continuidad entre sesiones
 

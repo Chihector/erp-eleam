@@ -1,6 +1,6 @@
 # Handoff para continuar ERP ELEAM con otra IA
 
-Fecha de actualización: 2026-10-22
+Fecha de actualización: 2026-10-24
 
 ## Resumen para retomar
 
@@ -8,10 +8,10 @@ ERP ELEAM es una aplicación Laravel 12 / Filament 5 para la operación de un
 ELEAM en Chile. Tiene módulos de trabajadores, contratos, turnos, asistencia,
 vacaciones, licencias, finanzas, remuneraciones y finiquitos.
 
-El proyecto quedó **unificado en una sola copia local** (`Erp eleam`, en
-OneDrive) y **una sola rama publicada** (`master` en GitHub). Los worktrees
-auxiliares de Orca fueron eliminados después de verificar que no tenían commits
-únicos. El repositorio local quedó limpio.
+El proyecto está **unificado en una sola rama publicada** (`master` en GitHub).
+La copia de trabajo actual es
+`Desktop\Nueva carpeta\repos-github\Erp-eleam`; evita mantener otra copia
+divergente. El repositorio local quedó limpio y sincronizado.
 
 ## Estado de código y entorno local
 
@@ -20,7 +20,9 @@ auxiliares de Orca fueron eliminados después de verificar que no tenían commit
 - PHP local: 8.2.12; cumple el requisito `^8.2`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
-- Base local: SQLite; migraciones aplicadas, incluida `notifications`.
+- Base local: SQLite; migraciones aplicadas, incluidas `notifications` y los
+  campos P0 de liquidaciones.
+- Suite completa: **120 pruebas aprobadas, 427 aserciones** (2026-10-24).
 - `.env` local y `database/database.sqlite` son datos locales ignorados por Git.
 - Administrador local: `admin@eleam.cl`. No hay contraseña fija en el código.
   Si no la conoces, restablécela con:
@@ -45,12 +47,17 @@ commit:
 - Comandos de mantenimiento `log:clear` y `db:optimize`.
 - Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos
   programados.
+- El commit `38e6987` agregó IUSC, descuentos adicionales, origen de días desde
+  licencias/asistencias, cierre/reapertura con trazabilidad y pruebas P0.
+- El 2026-10-24 se actualizaron las dependencias, se aplicaron las migraciones
+  pendientes, se corrigió la prueba de respaldo, se agregó CI y se programó el
+  scheduler/respaldo en el instalador de servidor.
 
 ## Validaciones ejecutadas
 
-- `php artisan test`: **103 pruebas aprobadas, 318 aserciones**.
-- `php artisan migrate --force`: migraciones legales y de notificaciones
-  aplicadas en la SQLite local.
+- `php artisan test`: **120 pruebas aprobadas, 427 aserciones**.
+- `php artisan migrate --force`: migraciones legales, de notificaciones y campos
+  P0 aplicadas en la SQLite local.
 - `php artisan schedule:list`: seis tareas registradas, todas con comandos
   existentes.
 - `php artisan notificaciones:diarias --dry-run`: correcto.
@@ -63,18 +70,19 @@ commit:
 
 ## Automatización y configuración
 
-El scheduler **no se ejecuta solo**. En local:
+El scheduler **no se ejecuta solo** en local. En local:
 
 ```powershell
 php artisan schedule:work
 ```
 
-En producción se debe configurar el cron de Laravel (`schedule:run` cada
-minuto). Las notificaciones se envían en forma inmediata y no requieren un
-worker de colas. Tareas registradas:
+En producción, el instalador de servidor crea `/etc/cron.d/eleam` con
+`schedule:run` cada minuto y el respaldo diario a las 3:00. Verifícalo con
+`sudo -u www-data php artisan schedule:list`. Las notificaciones se envían en
+forma inmediata y no requieren un worker de colas. Tareas registradas:
 
 - 08:00: notificaciones diarias.
-- 02:00: respaldo a Google Drive (solo si está configurado).
+- 02:00: respaldo a Google Drive (solo SQLite y si está configurado).
 - Domingo 03:00: limpieza de logs.
 - Día 1, 04:00: optimización de la base de datos.
 - Lunes 07:00: reporte semanal.
@@ -82,7 +90,9 @@ worker de colas. Tareas registradas:
 
 Para el respaldo a Google Drive se necesitan
 `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`. El archivo de
-credenciales está en `.gitignore`; nunca debe subirse al repositorio.
+credenciales está en `.gitignore`; nunca debe subirse al repositorio. Este
+respaldo solo funciona con SQLite; con PostgreSQL usa `deploy/respaldar.sh` o
+`pg_dump` y copia el archivo fuera del servidor.
 
 ## Hallazgos funcionales importantes: no procesar nómina real todavía
 
@@ -92,20 +102,21 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
 1. La UF y la UTM se obtienen de mindicador.cl, una fuente externa de
    referencia. Los topes, el SIS y el sueldo mínimo deben contrastarse con la
    normativa vigente y marcarse como verificados por una persona responsable.
-2. El cálculo usa la AFP y la salud del trabajador, pero **no calcula el
-   impuesto único de segunda categoría**. También faltan otros descuentos
-   posibles (anticipos, sindicatos, cargas familiares) y la validación del plan
-   Isapre contra el contrato real.
-3. El cálculo recibe los días trabajados manualmente (30 por defecto). No
-   descuenta automáticamente licencias, ausencias ni marcas de asistencia.
+2. El IUSC ya se calcula con la tabla SII 2026, pero hay que validar con un
+   contador la base imponible y si la salud deducible debe ser el 7 % legal o el
+   plan Isapre completo. También revisar topes y gratificación.
+3. Los días trabajados pueden venir de licencias no rechazadas, asistencias o
+   ingreso manual. Las licencias **Pendientes** también descuentan. El modo
+   asistencia prorratea el sueldo mensual por días con marca; esa regla debe
+   acordarse antes de usarla para pagos.
 4. No afirmar que el CSV sea certificación oficial de la Dirección del Trabajo
    sin validar formato y reglas actuales.
 5. Los cálculos de licencias y finiquitos son simplificados; solicitar revisión
    laboral/contable y contrastar con fuentes oficiales antes de pagos, firma o
    reportes.
-6. Una liquidación marcada como `cerrada` todavía puede recalcularse con el
-   generador. Falta un flujo de cierre/reapertura con permisos y registro antes
-   de usar el módulo como libro oficial.
+6. El cierre de liquidaciones ya bloquea el recálculo y la reapertura deja
+   trazabilidad. El cierre compara la UTM usada, pero no la UF, el sueldo mínimo
+   ni todos los topes; revisar ese control si los parámetros cambian.
 
 ## Próximos pasos sugeridos
 
@@ -113,19 +124,21 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
    segunda categoría y el tratamiento de licencias/ausencias.
 2. Definir quién verifica los parámetros legales cada mes y dejar registro de
    esa revisión en el panel.
-3. Integrar asistencias/licencias con los días trabajados antes de automatizar
-   el pago.
+3. Validar con el responsable laboral el tratamiento de licencias pendientes,
+   ausencias y el prorrateo por asistencia antes de automatizar el pago.
 4. Ensayar PostgreSQL, respaldos/restauración y despliegue antes de un piloto
    externo.
 5. Configurar correo real y probar el envío de notificaciones y reportes.
 6. Configurar Google Drive en un entorno de ensayo y probar una restauración
-   completa.
+   completa. El respaldo integrado solo cubre SQLite; con PostgreSQL usar
+   `pg_dump`/`deploy/respaldar.sh` y copiar el respaldo fuera del servidor.
 
 ## Comandos útiles
 
 ```powershell
 php artisan test
 php artisan test --filter=ComandosMantenimientoTest
+php artisan test --filter=LiquidacionP0Test
 php artisan test --filter=DashboardWidgetsTest
 php artisan test --filter=NotificacionesDiariasTest
 php artisan eleam:parametros-actualizar --mes=10 --anio=2026

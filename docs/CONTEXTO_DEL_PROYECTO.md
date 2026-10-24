@@ -22,8 +22,7 @@ ni reportes oficiales.
   reportes PDF, respaldo a Google Drive y tareas programadas.
 - La aplicación y sus pruebas están implementadas en Laravel; los detalles de
   cobertura y el resultado verificable más reciente se registran en
-  [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md). Estado actual: 103 pruebas y 318
-  aserciones aprobadas.
+  [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md).
 - El repositorio no contiene `vendor/` de forma predeterminada; antes de correr
   pruebas en una instalación limpia se debe ejecutar `composer install`.
 - No se ha acreditado en este repositorio una puesta en producción, una
@@ -53,6 +52,7 @@ Directorios que conviene conocer:
 - `routes/web.php` y `resources/views/pdf`: portada y descargas protegidas de
   PDF.
 - `tests/Feature` y `tests/Unit`: pruebas automatizadas.
+- `tests/e2e`: scripts heredados de QA visual; no forman parte de PHPUnit ni CI.
 - `deploy`, `docker-compose.yml` y `docs/DESPLIEGUE_*`: opciones de instalación
   y operación.
 
@@ -122,9 +122,17 @@ En remuneraciones, la UF y la UTM se consultan desde mindicador.cl; el sueldo
 mínimo sale de una tabla de vigencia configurable. Los topes y el SIS no se
 descargan automáticamente. La AFP y la salud se toman de cada trabajador, con
 tope de salud de 60 UF, y el SIS se informa como costo del empleador sin
-descontarlo del líquido. **No se
-calcula el impuesto único de segunda categoría** ni se descuentan
-automáticamente licencias o ausencias: los días trabajados se ingresan a mano.
+descontarlo del líquido. **El impuesto único de segunda categoría se calcula**
+con la tabla SII configurable en `config/legal.php`. Los días trabajados pueden
+calcularse desde licencias médicas no rechazadas, desde asistencias registradas
+o ingresarse manualmente. El cierre exige parámetros verificados y bloquea el
+recálculo; la reapertura es exclusiva del administrador y deja usuario, fecha y
+motivo registrados.
+
+Persisten límites que requieren validación laboral/contable: la tabla del IUSC,
+el tratamiento de la salud Isapre, el prorrateo por asistencia, las licencias
+pendientes, los topes y la gratificación. Las pruebas automatizadas protegen el
+comportamiento codificado, no certifican cumplimiento normativo.
 
 Antes de usar los cálculos para pagar, firmar documentos o presentar
 información oficial:

@@ -91,10 +91,11 @@ php artisan test
 php artisan route:list --path=admin
 ```
 
-Las pruebas usan SQLite en memoria. La suite completa ejecuta **103 pruebas y
-318 aserciones**. La base SQLite local conserva los datos de prueba manual entre
-reinicios. No ejecutes `php artisan migrate:fresh` si quieres conservarlos: ese
-comando elimina todas las tablas y sus datos.
+Las pruebas usan SQLite en memoria. La suite completa debe quedar en verde; el
+resultado vigente se registra en [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md). La base
+SQLite local conserva los datos de prueba manual entre reinicios. No ejecutes
+`php artisan migrate:fresh` si quieres conservarlos: ese comando elimina todas
+las tablas y sus datos.
 
 La QA visual local puede repetirse iniciando sesión y recorriendo el panel en el
 navegador; las pruebas automatizadas de `SeguridadTest` ya verifican los 403 y
