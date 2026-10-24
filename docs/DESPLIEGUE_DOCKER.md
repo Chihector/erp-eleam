@@ -149,7 +149,8 @@ El contenedor ejecuta el respaldo automático a Google Drive según el scheduler
 Además, programa un respaldo local una vez al día (Programador de tareas de
 Windows o cron en Linux) y guarda los archivos en una carpeta segura o en la
 nube. Prueba la restauración en una base temporal antes de confiar en el
-respaldo; en el servidor Linux puedes usar `deploy/probar-restauracion.sh`.
+respaldo. Si usas el respaldo plano de `deploy/respaldar.sh` en un servidor
+Linux, puedes ensayarlo con `deploy/probar-restauracion.sh`.
 
 ---
 

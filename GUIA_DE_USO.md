@@ -451,9 +451,11 @@ El PDF se guarda en `storage/app/reportes/`. La opción `--email` envía el repo
 El respaldo incluye la base de datos, `storage/` y una copia del `.env` **sin secretos**. En SQLite la base se copia con `VACUUM INTO`, así que incluye las transacciones que todavía están en el WAL. En PostgreSQL se usa `pg_dump` en formato custom y se restaura con `pg_restore`. Para configurarlo:
 
 > **PostgreSQL:** el servidor necesita el cliente `pg_dump`. Si no está en el
-> PATH, define `PG_DUMP_PATH` en `.env`. Para restaurar un respaldo:
+> PATH, define `PG_DUMP_PATH` en `.env`. El archivo `.dump` que sube este
+> comando se restaura con
 > `pg_restore --clean --if-exists --no-owner -d base_destino archivo.dump`.
-> El ensayo completo se puede repetir con `deploy/probar-restauracion.sh`.
+> El respaldo plano `.sql.gz` que genera `deploy/respaldar.sh` se ensaya con
+> `deploy/probar-restauracion.sh`.
 1. Crea una cuenta de servicio en Google Cloud y descarga su archivo JSON.
 2. Guarda el JSON fuera de Git; por ejemplo, en la raíz como `google-drive-credentials.json` (ya está en `.gitignore`).
 3. Crea una carpeta en Google Drive y copia su ID.

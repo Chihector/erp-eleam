@@ -129,10 +129,11 @@ forma inmediata y no requieren un worker de colas. Tareas registradas:
 Para el respaldo a Google Drive se necesitan
 `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`. El archivo de
 credenciales está en `.gitignore`; nunca debe subirse al repositorio. En
-PostgreSQL el comando usa `pg_dump`; si el binario no está en PATH, define
-`PG_DUMP_PATH`. El respaldo se restaura con
-`pg_restore --clean --if-exists --no-owner -d base_destino archivo.dump` y se
-puede ensayar con `deploy/probar-restauracion.sh`.
+PostgreSQL el comando usa `pg_dump` en formato custom; si el binario no está en
+PATH, define `PG_DUMP_PATH`. Ese `.dump` se restaura con
+`pg_restore --clean --if-exists --no-owner -d base_destino archivo.dump`. El
+respaldo plano `.sql.gz` de `deploy/respaldar.sh` se ensaya con
+`deploy/probar-restauracion.sh`.
 
 ## Hallazgos funcionales importantes: no procesar nómina real todavía
 
