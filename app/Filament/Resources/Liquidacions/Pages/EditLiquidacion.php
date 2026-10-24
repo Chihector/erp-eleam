@@ -13,7 +13,12 @@ class EditLiquidacion extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->label('Eliminar')
+                ->modalHeading('Eliminar liquidación')
+                ->modalDescription('La liquidación se archivará y podrá restaurarse. No se borra definitivamente.')
+                ->successNotificationTitle('Liquidación archivada')
+                ->authorize('delete'),
         ];
     }
 }

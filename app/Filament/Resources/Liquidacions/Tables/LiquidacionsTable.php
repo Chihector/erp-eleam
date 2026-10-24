@@ -7,10 +7,12 @@ use App\Services\RemuneracionService;
 use App\Support\Buscador;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class LiquidacionsTable
@@ -132,7 +134,7 @@ class LiquidacionsTable
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 Action::make('pdf')
@@ -140,10 +142,12 @@ class LiquidacionsTable
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('success')
                     ->url(fn (Liquidacion $record) => route('liquidaciones.pdf', $record))
+                    ->visible(fn (Liquidacion $record): bool => ! $record->trashed())
                     ->openUrlInNewTab(),
 
                 EditAction::make()
-                    ->visible(fn (Liquidacion $record): bool => ! $record->cerrada
+                    ->visible(fn (Liquidacion $record): bool => ! $record->trashed()
+                        && ! $record->cerrada
                         && (auth()->user()?->can('update', $record) ?? false)),
 
                 Action::make('cerrar')
@@ -154,7 +158,8 @@ class LiquidacionsTable
                     ->modalHeading('Cerrar liquidación')
                     ->modalDescription('Al cerrar, la liquidación queda inmutable. Solo un administrador puede reabrirla con un motivo registrado. Se exige que los parámetros legales del período estén verificados.')
                     ->modalSubmitActionLabel('Cerrar liquidación')
-                    ->visible(fn (Liquidacion $record): bool => ! $record->cerrada
+                    ->visible(fn (Liquidacion $record): bool => ! $record->trashed()
+                        && ! $record->cerrada
                         && (auth()->user()?->can('cerrar', $record) ?? false))
                     ->action(function (Liquidacion $record): void {
                         $usuario = auth()->user();
@@ -196,7 +201,8 @@ class LiquidacionsTable
                             ->maxLength(1000)
                             ->helperText('Explica qué error se corrigió. Este texto queda en la auditoría.'),
                     ])
-                    ->visible(fn (Liquidacion $record): bool => $record->cerrada
+                    ->visible(fn (Liquidacion $record): bool => ! $record->trashed()
+                        && $record->cerrada
                         && (auth()->user()?->can('reabrir', $record) ?? false))
                     ->action(function (Liquidacion $record, array $data): void {
                         $usuario = auth()->user();
@@ -226,6 +232,9 @@ class LiquidacionsTable
                                 ->send();
                         }
                     }),
+
+                RestoreAction::make()
+                    ->authorize('restore'),
             ]);
     }
 }

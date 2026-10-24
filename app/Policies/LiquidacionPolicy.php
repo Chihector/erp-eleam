@@ -44,6 +44,20 @@ class LiquidacionPolicy
         return $this->puedeGestionar($user, ['contador']);
     }
 
+    public function restore(User $user, Liquidacion $record): bool
+    {
+        return $this->soloAdministrador($user);
+    }
+
+    /**
+     * Una liquidación nunca se borra definitivamente desde el panel: el
+     * soft delete y su restauración son el mecanismo de corrección.
+     */
+    public function forceDelete(User $user, Liquidacion $record): bool
+    {
+        return false;
+    }
+
     public function cerrar(User $user, Liquidacion $record): bool
     {
         return ! $record->cerrada

@@ -20,7 +20,9 @@ class LiquidacionResource extends Resource
     protected static ?string $model = Liquidacion::class;
 
     protected static ?string $modelLabel = 'Liquidación';
+
     protected static ?string $pluralModelLabel = 'Liquidaciones';
+
     protected static ?string $navigationLabel = 'Liquidaciones';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedReceiptPercent;

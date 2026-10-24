@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\LiquidacionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Liquidacion extends Model implements Auditable
@@ -13,6 +14,7 @@ class Liquidacion extends Model implements Auditable
     use HasFactory;
 
     use \OwenIt\Auditing\Auditable;
+    use SoftDeletes;
 
     protected $fillable = [
         'trabajador_id',

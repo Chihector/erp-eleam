@@ -358,4 +358,27 @@ class LiquidacionP0Test extends TestCase
         $this->assertTrue($this->administrador->can('reabrir', $liquidacion));
         $this->assertFalse($this->contador->can('reabrir', $liquidacion));
     }
+
+    public function test_eliminar_liquidacion_la_archiva_y_permite_restaurarla(): void
+    {
+        $this->crearParametro();
+        $trabajador = $this->crearTrabajador();
+        $liquidacion = app(RemuneracionService::class)->calcularLiquidacion($trabajador, 10, 2026, 30);
+
+        // Solo un administrador puede restaurar y nunca se borra en duro.
+        $this->assertTrue($this->administrador->can('restore', $liquidacion));
+        $this->assertFalse($this->contador->can('restore', $liquidacion));
+        $this->assertFalse($this->administrador->can('forceDelete', $liquidacion));
+
+        $liquidacion->delete();
+
+        $this->assertSoftDeleted('liquidacions', ['id' => $liquidacion->id]);
+        $this->assertSame(0, Liquidacion::count());
+        $this->assertSame(1, Liquidacion::withTrashed()->count());
+
+        $liquidacion->restore();
+
+        $this->assertSame(1, Liquidacion::count());
+        $this->assertFalse($liquidacion->fresh()->trashed());
+    }
 }
