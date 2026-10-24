@@ -97,7 +97,7 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
   - **Finanzas:** Ingresos, Gastos, Liquidaciones, Finiquitos.
   - **Configuración:** Parámetros Legales, Usuarios *(visibles solo para el Administrador)*.
 - [x] Iconos distintivos por módulo y visibilidad automática según el rol del usuario.
-- [x] **Despliegue profesional con Docker:** `Dockerfile` (nginx + PHP-FPM + OPcache), `docker-compose.yml` (aplicación + PostgreSQL 16) y guía completa en **[docs/DESPLIEGUE_DOCKER.md](docs/DESPLIEGUE_DOCKER.md)**.
+- [x] **Despliegue profesional con Docker:** `Dockerfile` (nginx + PHP-FPM + OPcache), `docker-compose.yml` (aplicación + PostgreSQL 17) y guía completa en **[docs/DESPLIEGUE_DOCKER.md](docs/DESPLIEGUE_DOCKER.md)**.
 - [x] **Migración de datos SQLite → PostgreSQL en un comando:** `php artisan eleam:migrate-sqlite` (copia tablas, convierte booleanos y sincroniza secuencias).
 - [x] **Índices de rendimiento** en turnos, asistencias, liquidaciones, vacaciones, gastos e ingresos para acelerar las consultas más frecuentes.
 - [x] **Despliegue como App Web sin Docker:** instalador automático para servidor Ubuntu (`deploy/instalar-servidor.sh`), script de actualización (`deploy/actualizar.sh`), respaldo automático (`deploy/respaldar.sh`) y guía en **[docs/DESPLIEGUE_SERVIDOR.md](docs/DESPLIEGUE_SERVIDOR.md)**.
@@ -135,9 +135,9 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 - [x] Cálculo eficiente del saldo de vacaciones, sin consultas N+1 en listados y widgets.
 - [x] Notificaciones diarias por correo y en base de datos: contratos por vencer (30/15/7/3/1 días), vacaciones acumuladas y licencias médicas por vencer o vencidas.
 - [x] Reportes PDF semanales y mensuales de notificaciones, con envío opcional a administradores.
-- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. La base se copia con `VACUUM INTO` para incluir las transacciones del WAL. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite. **Solo respalda SQLite**: con PostgreSQL usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo fuera del servidor.
-- [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`. El instalador de servidor configura el cron de Laravel; en Docker o local hay que ejecutarlo aparte.
-- [x] Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos programados.
+- [x] Respaldo automático a Google Drive de la base de datos, `storage/` y un `.env` sanitizado. En SQLite se copia con `VACUUM INTO` (incluye las transacciones del WAL); en PostgreSQL se usa `pg_dump` en formato custom, restaurable con `pg_restore`. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite. En PostgreSQL el servidor necesita el cliente `pg_dump` o la variable `PG_DUMP_PATH`.
+- [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`. El instalador de servidor configura el cron de Laravel, Docker lo ejecuta en el contenedor y en local se usa `php artisan schedule:work`.
+- [x] Pruebas de dashboard, notificaciones, reportes, respaldo simulado, respaldo/restauración de PostgreSQL y comandos programados.
 
 ---
 
@@ -148,6 +148,11 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
+En Windows también puedes abrirlo como aplicación con doble clic en
+`windows\Iniciar-ERP.bat`: levanta el servidor, espera a que responda y abre
+Edge en modo app con un perfil dedicado. Para detenerlo, usa
+`windows\Detener-ERP.bat`.
+
 ### 2. Ingresar al panel administrativo
 - **Desde tu PC:** 👉 **[http://localhost:8000/admin](http://localhost:8000/admin)**
 - **Desde tu teléfono móvil:** 👉 **`http://192.168.1.122:8000/admin`**
@@ -157,7 +162,11 @@ El scheduler envía notificaciones, genera reportes y ejecuta mantenciones. En u
 ```bash
 php artisan schedule:work
 ```
-En producción, el instalador de servidor configura el cron de Laravel; si instalas de otra forma, agrégalo manualmente. El respaldo a Google Drive solo se ejecuta si existen `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID` y la base es SQLite.
+En producción, el instalador de servidor configura el cron de Laravel y Docker
+incluye el scheduler en el contenedor; si instalas de otra forma, agrégalo
+manualmente. El respaldo a Google Drive se ejecuta si existen
+`GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`. En
+PostgreSQL requiere `pg_dump` instalado o `PG_DUMP_PATH` configurado.
 
 ### 🐳 Modo profesional con Docker + PostgreSQL
 

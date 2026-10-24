@@ -141,8 +141,9 @@ Agrega esta línea al final y guarda:
 ```
 
 Esto respalda todos los días a las 3:00 AM y borra respaldos de más de 30 días.
-El respaldo usa `pg_dump`; el comando `backup:google-drive` solo respalda SQLite.
-Copia `/var/backups/eleam/` a un destino externo y prueba una restauración.
+El respaldo usa `pg_dump`; el comando `backup:google-drive` también soporta
+PostgreSQL y usa el mismo cliente. Copia `/var/backups/eleam/` a un destino
+externo y prueba una restauración con `deploy/probar-restauracion.sh`.
 
 Verifica que el scheduler quede registrado:
 

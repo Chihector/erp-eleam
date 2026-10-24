@@ -108,12 +108,10 @@ docker compose --env-file .env.production exec app \
     --nombre=Administrador --apellido=Sistema --rut=11111111-1
 ```
 
-> 🔔 **Tareas programadas:** el contenedor `app` no ejecuta el scheduler. Para
-> notificaciones, reportes y mantenciones agrega un servicio que ejecute
-> `php artisan schedule:work` con la misma imagen y variables de entorno, o
-> programa `docker compose exec app php artisan schedule:run` cada minuto en el
-> servidor. El respaldo a Google Drive del sistema solo cubre SQLite; con
-> PostgreSQL usa `pg_dump` y copia el respaldo fuera del servidor.
+> 🔔 **Tareas programadas:** el contenedor `app` ejecuta `schedule:work` mediante
+> supervisord, así que notificaciones, reportes y respaldos funcionan sin un
+> servicio aparte. El respaldo a Google Drive soporta SQLite y PostgreSQL; en
+> Docker usa el `pg_dump` incluido en la imagen.
 
 ---
 
@@ -136,7 +134,7 @@ docker compose --env-file .env.production exec app \
 
 ```bash
 docker compose --env-file .env.production exec postgres \
-    pg_dump -U eleam eleam > respaldo_2026-10-18.sql
+    pg_dump --no-owner --clean --if-exists -U eleam eleam > respaldo_2026-10-18.sql
 ```
 
 ### Restaurar un respaldo
@@ -147,8 +145,11 @@ type respaldo_2026-10-18.sql | docker compose --env-file .env.production exec -T
 ```
 
 ### Recomendación
-Programa el respaldo una vez al día (Programador de tareas de Windows o cron en Linux)
-y guarda los archivos `.sql` en una carpeta segura o en la nube.
+El contenedor ejecuta el respaldo automático a Google Drive según el scheduler.
+Además, programa un respaldo local una vez al día (Programador de tareas de
+Windows o cron en Linux) y guarda los archivos en una carpeta segura o en la
+nube. Prueba la restauración en una base temporal antes de confiar en el
+respaldo; en el servidor Linux puedes usar `deploy/probar-restauracion.sh`.
 
 ---
 

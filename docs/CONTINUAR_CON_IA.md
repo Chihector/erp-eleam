@@ -22,11 +22,12 @@ divergente. El repositorio local quedó limpio y sincronizado, con la etiqueta
 - PHP local: 8.2.12; cumple el requisito `^8.2` y tiene `pdo_pgsql`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
-- Base local: SQLite; migraciones aplicadas, incluidas `notifications` (JSON) y
-  los campos P0 de liquidaciones.
-- Suite SQLite: **120 pruebas aprobadas, 427 aserciones** (2026-10-24).
-- Suite PostgreSQL 17: **120 pruebas, 426 aserciones, 1 omitida** (respaldo
-  Google Drive, exclusivo de SQLite). Configuración: `phpunit.pgsql.xml`.
+- Base local: SQLite; migraciones aplicadas, incluidas `notifications` (JSON),
+  los campos P0 y el soft delete de liquidaciones.
+- Suite SQLite: **121 pruebas aprobadas, 1 omitida y 435 aserciones**
+  (2026-10-24). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
+- Suite PostgreSQL 17: **122 pruebas y 441 aserciones**, sin omisiones.
+  Configuración: `phpunit.pgsql.xml`.
 - `.env` local y `database/database.sqlite` son datos locales ignorados por Git.
 - Administrador local: `admin@eleam.cl`. No hay contraseña fija en el código.
   Si no la conoces, restablécela con:
@@ -64,16 +65,32 @@ commit:
 - La publicación de esa revisión quedó en `82db1fc`, `5eb47c5`, `178e2d9` y
   `249a7cd`, más la etiqueta `v0.1.0`. Después se actualizaron las actions del
   CI (`actions/checkout@v7`, `actions/setup-node@v7`).
+- El respaldo a Google Drive ahora soporta PostgreSQL: usa `pg_dump` en formato
+  custom y `pg_restore` para recuperar. La lógica vive en
+  `App\Services\RespaldoBaseDatos`.
+- Las liquidaciones usan soft delete. El panel permite ver las archivadas y
+  restaurarlas solo como administrador; no se borran en duro.
+- Se agregó un lanzador de Windows (`windows\Iniciar-ERP.bat`) que abre Edge en
+  modo app con perfil dedicado y espera `/up`.
+- Docker usa PostgreSQL 17, incluye `pg_dump` en la imagen y ejecuta el
+  scheduler dentro del contenedor.
+- `deploy/respaldar.sh` usa `pg_dump` con `--no-owner --clean --if-exists` y se
+  agregó `deploy/probar-restauracion.sh` para ensayar una restauración real.
 
 ## Validaciones ejecutadas
 
-- `php artisan test`: **120 pruebas aprobadas, 427 aserciones** en SQLite.
-- `vendor/bin/phpunit -c phpunit.pgsql.xml`: **120 pruebas, 426 aserciones y
-  1 omitida** contra PostgreSQL 17 (la omitida es el respaldo Google Drive).
+- `php artisan test`: **121 pruebas aprobadas, 1 omitida y 435 aserciones** en
+  SQLite.
+- `vendor/bin/phpunit -c phpunit.pgsql.xml`: **122 pruebas y 441 aserciones**
+  contra PostgreSQL 17, incluido el ensayo real de `pg_dump` + `pg_restore`.
 - `php artisan migrate:fresh --force` contra PostgreSQL 17: correcto, incluida
   la conversión de `notifications.data` a JSON.
-- `php artisan migrate --force`: migraciones legales, de notificaciones y campos
-  P0 aplicadas en la SQLite local.
+- `php artisan migrate --force`: migraciones legales, de notificaciones, campos
+  P0 y soft delete de liquidaciones aplicadas en la SQLite local.
+- `backup:google-drive --database --dry-run` con PostgreSQL: genera un `.dump`
+  real, lo muestra y lo elimina al terminar.
+- `windows\Iniciar-ERP.ps1 -SinNavegador` y `windows\Detener-ERP.ps1`: el
+  servidor responde `/up` y el proceso PHP se detiene sin tocar otros procesos.
 - `php artisan schedule:list`: seis tareas registradas, todas con comandos
   existentes.
 - `php artisan notificaciones:diarias --dry-run`: correcto.
@@ -85,7 +102,8 @@ commit:
 - `php artisan db:optimize`: VACUUM y ANALYZE correctos en SQLite.
 - `vendor\bin\pint` y `git diff --check` se ejecutan antes de publicar.
 - GitHub Actions ejecuta dos jobs: **PHP 8.2 · SQLite** y
-  **PHP 8.3 · PostgreSQL 17**. El primero pasó en verde con 120/427.
+  **PHP 8.3 · PostgreSQL 17**. Ambos incluyen la suite completa; el job
+  PostgreSQL instala el cliente 17 para probar `pg_dump` y `pg_restore`.
 
 ## Automatización y configuración
 
@@ -96,12 +114,13 @@ php artisan schedule:work
 ```
 
 En producción, el instalador de servidor crea `/etc/cron.d/eleam` con
-`schedule:run` cada minuto y el respaldo diario a las 3:00. Verifícalo con
+`schedule:run` cada minuto y el respaldo diario a las 3:00. Docker ejecuta
+`schedule:work` dentro del contenedor mediante supervisord. Verifícalo con
 `sudo -u www-data php artisan schedule:list`. Las notificaciones se envían en
 forma inmediata y no requieren un worker de colas. Tareas registradas:
 
 - 08:00: notificaciones diarias.
-- 02:00: respaldo a Google Drive (solo SQLite y si está configurado).
+- 02:00: respaldo a Google Drive (SQLite o PostgreSQL, si está configurado).
 - Domingo 03:00: limpieza de logs.
 - Día 1, 04:00: optimización de la base de datos.
 - Lunes 07:00: reporte semanal.
@@ -109,9 +128,11 @@ forma inmediata y no requieren un worker de colas. Tareas registradas:
 
 Para el respaldo a Google Drive se necesitan
 `GOOGLE_DRIVE_CREDENTIALS_PATH` y `GOOGLE_DRIVE_BACKUP_FOLDER_ID`. El archivo de
-credenciales está en `.gitignore`; nunca debe subirse al repositorio. Este
-respaldo solo funciona con SQLite; con PostgreSQL usa `deploy/respaldar.sh` o
-`pg_dump` y copia el archivo fuera del servidor.
+credenciales está en `.gitignore`; nunca debe subirse al repositorio. En
+PostgreSQL el comando usa `pg_dump`; si el binario no está en PATH, define
+`PG_DUMP_PATH`. El respaldo se restaura con
+`pg_restore --clean --if-exists --no-owner -d base_destino archivo.dump` y se
+puede ensayar con `deploy/probar-restauracion.sh`.
 
 ## Hallazgos funcionales importantes: no procesar nómina real todavía
 
@@ -150,14 +171,16 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
    suite ya pasa en PostgreSQL local y en CI, pero falta el servidor real.
 5. Configurar correo real y probar el envío de notificaciones y reportes.
 6. Configurar Google Drive en un entorno de ensayo y probar una restauración
-   completa. El respaldo integrado solo cubre SQLite; con PostgreSQL usar
-   `pg_dump`/`deploy/respaldar.sh` y copiar el respaldo fuera del servidor.
+   completa con `deploy/probar-restauracion.sh` o `pg_restore`. El respaldo
+   integrado ya cubre SQLite y PostgreSQL; igualmente hay que copiar el
+   respaldo fuera del servidor y verificar la restauración periódicamente.
 
 ## Comandos útiles
 
 ```powershell
 php artisan test
 vendor/bin/phpunit -c phpunit.pgsql.xml
+vendor/bin/phpunit -c phpunit.pgsql.xml --filter=RespaldoPostgresTest
 php artisan test --filter=ComandosMantenimientoTest
 php artisan test --filter=LiquidacionP0Test
 php artisan test --filter=DashboardWidgetsTest

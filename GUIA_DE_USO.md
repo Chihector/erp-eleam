@@ -257,7 +257,22 @@ y motivo registrados.
    editarla. El cierre anterior y el motivo de la reapertura quedan en la
    auditoría.
 
-### E. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
+### E. Archivar y restaurar una liquidación
+Una liquidación no se borra definitivamente: al eliminarla queda **archivada** y
+deja de aparecer en el listado normal.
+
+1. Abre la liquidación y pulsa **"Eliminar"**. El sistema pide confirmación y
+   avisa que el registro se archivará.
+2. En **Liquidaciones**, abre el filtro **"Registros eliminados"** y elige
+   **"Solo registros eliminados"** para ver las archivadas.
+3. Solo un **Administrador** puede pulsar **"Restaurar"** para devolverla al
+   listado. No existe borrado definitivo desde el panel.
+
+> Mientras una liquidación del mismo trabajador, mes y año esté archivada, no se
+> puede generar otra para ese período. Restaura la archivada o revisa el
+> período antes de volver a generarla.
+
+### F. Descargar el Libro de Remuneraciones Digital (Dirección del Trabajo)
 1. En el menú, ve a **Liquidaciones**.
 2. Haz clic en el botón superior **"Libro de Remuneraciones DT"** (icono de descarga).
 3. Elige el **Mes** y **Año** del período que quieres exportar.
@@ -433,12 +448,12 @@ php artisan reporte:notificaciones --periodo=semanal --email
 El PDF se guarda en `storage/app/reportes/`. La opción `--email` envía el reporte a los usuarios con rol **administrador**; requiere correo configurado.
 
 ### D. Respaldo a Google Drive
-El respaldo incluye la base SQLite, `storage/` y una copia del `.env` **sin secretos**. La base se copia con `VACUUM INTO`, así que incluye las transacciones que todavía están en el WAL. Para configurarlo:
+El respaldo incluye la base de datos, `storage/` y una copia del `.env` **sin secretos**. En SQLite la base se copia con `VACUUM INTO`, así que incluye las transacciones que todavía están en el WAL. En PostgreSQL se usa `pg_dump` en formato custom y se restaura con `pg_restore`. Para configurarlo:
 
-> ⚠️ **Solo SQLite:** si el sistema usa PostgreSQL, este comando no respalda la
-> base de datos y falla de forma explícita al pedir `--all` o `--database`.
-> En ese caso usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo a un
-> destino externo.
+> **PostgreSQL:** el servidor necesita el cliente `pg_dump`. Si no está en el
+> PATH, define `PG_DUMP_PATH` en `.env`. Para restaurar un respaldo:
+> `pg_restore --clean --if-exists --no-owner -d base_destino archivo.dump`.
+> El ensayo completo se puede repetir con `deploy/probar-restauracion.sh`.
 1. Crea una cuenta de servicio en Google Cloud y descarga su archivo JSON.
 2. Guarda el JSON fuera de Git; por ejemplo, en la raíz como `google-drive-credentials.json` (ya está en `.gitignore`).
 3. Crea una carpeta en Google Drive y copia su ID.

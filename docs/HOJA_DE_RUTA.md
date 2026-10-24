@@ -17,12 +17,13 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 ### P0 — Cerrar antes de entregar
 
 - [x] Ejecutar la suite completa en SQLite en memoria y registrar el resultado:
-  **120 pruebas y 427 aserciones aprobadas** (verificación 2026-10-24). Incluye
-  previsión por trabajador, SIS, IUSC, cierre/reapertura, permisos, dashboard,
-  notificaciones, reportes, respaldo simulado y CSV.
-- [x] Validar la suite contra **PostgreSQL 17**: 120 pruebas, 426 aserciones y
-  1 omitida (la prueba de respaldo Google Drive, que solo aplica a SQLite). La
-  validación destapó y corrigió el tipo JSON de `notifications.data`.
+  **121 pruebas aprobadas, 1 omitida y 435 aserciones** (verificación
+  2026-10-24). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
+  Incluye previsión por trabajador, SIS, IUSC, cierre/reapertura, permisos,
+  dashboard, notificaciones, reportes, respaldo simulado y CSV.
+- [x] Validar la suite contra **PostgreSQL 17**: 122 pruebas y 441 aserciones,
+  sin omisiones. Incluye un ensayo real de `pg_dump` y restauración en una base
+  temporal. La validación destapó y corrigió el tipo JSON de `notifications.data`.
 - [ ] Confirmar con el usuario del negocio el alcance exacto de la entrega:
   demo, piloto interno o producción; qué módulos se usarán y quién los aprobará.
 - [ ] Obtener revisión laboral/contable de remuneraciones, licencias, vacaciones,
@@ -57,10 +58,11 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 - [ ] Preparar un entorno de ensayo con el mismo motor de base de datos elegido
   para producción. Ejecutar migraciones, alta de administrador, flujos completos
   y una actualización desde una versión anterior.
-- [ ] Realizar y restaurar un respaldo de ensayo, incluyendo la base PostgreSQL
-  y los archivos adjuntos, y copiarlo a un destino externo. Registrar dónde se
-  guarda y quién puede recuperarlo. El respaldo a Google Drive actual solo cubre
-  SQLite.
+- [ ] Realizar y restaurar un respaldo de ensayo completo, incluyendo la base
+  PostgreSQL y los archivos adjuntos, y copiarlo a un destino externo. Registrar
+  dónde se guarda y quién puede recuperarlo. El ensayo automatizado de la base
+  ya existe (`RespaldoPostgresTest` y `deploy/probar-restauracion.sh`); falta
+  incluir adjuntos y la copia externa.
 - [ ] Sustituir las contraseñas de ejemplo, configurar secretos únicos, HTTPS,
   `APP_DEBUG=false`, correo/registro operativo y acceso restringido. Nunca usar
   contraseñas publicadas en documentación.
@@ -82,9 +84,10 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 
 ### P2 — Próxima evolución técnica
 
-- [ ] Agregar integración continua para `composer install` y pruebas PHPUnit en
+- [x] Agregar integración continua para `composer install` y pruebas PHPUnit en
   cada cambio.
-- [ ] Mantener pruebas de migraciones y flujos en PostgreSQL además de SQLite.
+- [x] Mantener pruebas de migraciones y flujos en PostgreSQL además de SQLite,
+  incluido el ensayo de respaldo y restauración.
 - [ ] Añadir monitoreo y alertas operativas, y programar pruebas periódicas de
   restauración.
 - [ ] Definir versiones etiquetadas, changelog y procedimiento de reversa de
@@ -110,8 +113,8 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 - Repositorio: **publicado y sincronizado con `origin/master`**. La rama
   publicada es `master`; mantén una sola copia de trabajo canónica.
-- Últimos commits de esta revisión: `82db1fc` (corrección del respaldo y suite
-  en verde), `5eb47c5` (documentación), `178e2d9` (CI) y `249a7cd` (scheduler y
+- La revisión anterior quedó en `82db1fc` (corrección del respaldo y suite en
+  verde), `5eb47c5` (documentación), `178e2d9` (CI) y `249a7cd` (scheduler y
   respaldo en el instalador), más la actualización de las actions del CI.
 - Etiqueta publicada: **`v0.1.0`**, línea base probada. No implica validación
   legal ni autorización de producción.
@@ -119,15 +122,16 @@ operativos definidos y aceptación legal/contable documentada. No usar
   SQLite y PHP 8.3 con PostgreSQL 17.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
-- Suite completa SQLite: **120 aprobadas, 427 aserciones** (2026-10-24).
-- Suite completa PostgreSQL 17: **120 pruebas, 426 aserciones, 1 omitida**
-  (respaldo Google Drive, exclusivo de SQLite).
-- El respaldo SQLite ahora usa `VACUUM INTO` para obtener una copia consistente
-  y no perder transacciones que aún están en el WAL.
-- GitHub Actions ejecuta ambos motores en cada push o pull request. La
-  publicación inicial pasó en verde con 120/427 en SQLite.
-- Migraciones locales aplicadas, incluidas `notifications` (tipo JSON) y los
-  campos P0 de liquidaciones.
+- Suite completa SQLite: **121 aprobadas, 1 omitida y 435 aserciones**
+  (2026-10-24).
+- Suite completa PostgreSQL 17: **122 pruebas y 441 aserciones**, sin omisiones.
+- El respaldo SQLite usa `VACUUM INTO` para obtener una copia consistente y no
+  perder transacciones que aún están en el WAL. El respaldo PostgreSQL usa
+  `pg_dump` en formato custom y `pg_restore` para recuperar.
+- GitHub Actions ejecuta ambos motores en cada push o pull request. El job
+  PostgreSQL instala el cliente 17 y ejecuta el ensayo de restauración.
+- Migraciones locales aplicadas, incluidas `notifications` (tipo JSON), los
+  campos P0 y el soft delete de liquidaciones.
 - Pruebas nuevas relevantes:
   - `RemuneracionPrevisionalTest`: AFP propia, Isapre con plan y mínimo de 7 %,
     SIS fuera del líquido, contrato vigente y errores por datos faltantes.
@@ -142,8 +146,10 @@ operativos definidos y aceptación legal/contable documentada. No usar
     respeta el modo `--dry-run`.
   - `ComandosMantenimientoTest`: comandos programados, limpieza de logs,
     optimización, reporte PDF, envío por correo y respaldo simulado.
-  - `LiquidacionP0Test`: IUSC, descuentos adicionales, origen de días y
-    cierre/reapertura con permisos y trazabilidad.
+  - `RespaldoPostgresTest`: genera un `pg_dump`, lo restaura en una base
+    temporal y compara tablas y migraciones.
+  - `LiquidacionP0Test`: IUSC, descuentos adicionales, origen de días,
+    cierre/reapertura y borrado reversible de liquidaciones.
   - `EscenarioOperacionalDemoTest`, `PanelPaginasNuevasTest` y
     `PilotoRemuneraciones2026Test`: flujo operativo y regresión del panel.
 - QA visual headless previa: `/admin`, `/admin/parametro-legals`,
@@ -163,9 +169,14 @@ operativos definidos y aceptación legal/contable documentada. No usar
 - Riesgo vigente: la validación legal/contable (IUSC, salud Isapre, licencias,
   ausencias, topes y gratificación) sigue pendiente. El modo asistencia prorratea
   el sueldo mensual por días con marca; acordar esa regla antes de pagar. El
-  respaldo a Google Drive solo cubre SQLite; con PostgreSQL usar `pg_dump` y
-  probar una restauración completa. PostgreSQL ya pasa la suite local y en CI,
-  pero falta el ensayo en un servidor/staging con datos y respaldo reales.
+  respaldo a Google Drive ya cubre SQLite y PostgreSQL, pero falta ensayar la
+  restauración completa con adjuntos y copia externa en un servidor/staging con
+  datos de ensayo. La suite PostgreSQL y el ensayo de `pg_dump`/`pg_restore` ya
+  pasan en local y CI.
+- Se agregó un lanzador de Windows (`windows\Iniciar-ERP.bat`) para probar el
+  sistema como app con Edge, sin reemplazar el servidor web de producción.
+- Docker usa PostgreSQL 17, incluye `pg_dump` y ejecuta el scheduler dentro del
+  contenedor.
 
 ## Continuidad entre sesiones
 

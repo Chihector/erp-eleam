@@ -84,6 +84,21 @@ teléfono ni desde otros equipos de la red.
 Para detenerlo, vuelve a la ventana de PowerShell del servidor y presiona
 `Ctrl+C`.
 
+### Abrir como aplicación en Windows
+
+Si no quieres escribir comandos cada vez, usa el lanzador incluido:
+
+1. Doble clic en `windows\Iniciar-ERP.bat`.
+2. El script busca PHP, levanta el servidor, espera a que `/up` responda y abre
+   Edge en modo aplicación con un perfil dedicado en
+   `storage\app\edge-profile`.
+3. Para cerrar el servidor, doble clic en `windows\Detener-ERP.bat`. Esto no
+   cierra las ventanas de Edge; solo detiene el proceso PHP.
+
+El lanzador no instala nada ni reemplaza el servidor web de producción. Si
+prefieres el navegador normal, abre <http://127.0.0.1:8000/admin> después de
+iniciar el servidor.
+
 ## Verificaciones
 
 ```powershell
@@ -115,8 +130,12 @@ vendor/bin/phpunit -c phpunit.pgsql.xml
 
 `phpunit.pgsql.xml` ya trae valores por defecto para CI. No apuntes
 `DB_DATABASE` a la base de producción: `migrate:fresh` borra todas las tablas.
-La prueba de respaldo a Google Drive se omite en PostgreSQL porque ese comando
-solo respalda SQLite; para PostgreSQL usa `deploy/respaldar.sh` o `pg_dump`.
+
+La suite PostgreSQL incluye un ensayo real de respaldo: genera un `pg_dump`,
+lo restaura en una base temporal y compara tablas y migraciones. Necesita
+`pg_dump` y `pg_restore` en el PATH; si están instalados en otra ruta, define
+`PG_DUMP_PATH` y `PG_RESTORE_PATH`. El comando `backup:google-drive` también
+usa `pg_dump` cuando `DB_CONNECTION=pgsql`.
 
 La QA visual local puede repetirse iniciando sesión y recorriendo el panel en el
 navegador; las pruebas automatizadas de `SeguridadTest` ya verifican los 403 y

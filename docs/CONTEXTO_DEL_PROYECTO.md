@@ -26,13 +26,21 @@ ni reportes oficiales.
   (PHP 8.3) en cada push o pull request.
 - La validación en PostgreSQL obligó a guardar `notifications.data` como JSON;
   las consultas `data->>` ya funcionan en ambos motores.
+- El respaldo a Google Drive soporta SQLite (`VACUUM INTO`) y PostgreSQL
+  (`pg_dump`/`pg_restore`). Las liquidaciones usan soft delete y se pueden
+  restaurar desde el panel solo como administrador.
+- `windows\Iniciar-ERP.bat` abre el sistema en Edge como app para pruebas
+  locales; no reemplaza el servidor web de producción.
+- Docker usa PostgreSQL 17, incluye el cliente `pg_dump` y ejecuta el scheduler
+  dentro del contenedor.
 - La aplicación y sus pruebas están implementadas en Laravel; los detalles de
   cobertura y el resultado verificable más reciente se registran en
   [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md).
 - El repositorio no contiene `vendor/` de forma predeterminada; antes de correr
   pruebas en una instalación limpia se debe ejecutar `composer install`.
 - No se ha acreditado en este repositorio una puesta en producción, una
-  restauración de respaldo ensayada ni la validación legal de los cálculos.
+  restauración completa con datos y adjuntos reales ni la validación legal de
+  los cálculos.
 
 ## Tecnologías y estructura
 
@@ -44,7 +52,7 @@ ni reportes oficiales.
 | Autorización | Policies de Laravel y roles de Spatie Permission |
 | Reportes | DomPDF para documentos PDF; CSV para exportación de remuneraciones |
 | Frontend | Blade/Filament, CSS y JavaScript compilados con Vite |
-| Pruebas | PHPUnit mediante `php artisan test`; SQLite en memoria |
+| Pruebas | PHPUnit con SQLite en memoria y PostgreSQL 17 (`phpunit.pgsql.xml`) |
 
 Directorios que conviene conocer:
 
@@ -58,9 +66,10 @@ Directorios que conviene conocer:
 - `routes/web.php` y `resources/views/pdf`: portada y descargas protegidas de
   PDF.
 - `tests/Feature` y `tests/Unit`: pruebas automatizadas.
+- `windows`: lanzador y detención del servidor local en Windows.
 - `tests/e2e`: scripts heredados de QA visual; no forman parte de PHPUnit ni CI.
-- `deploy`, `docker-compose.yml` y `docs/DESPLIEGUE_*`: opciones de instalación
-  y operación.
+- `deploy`, `docker-compose.yml` y `docs/DESPLIEGUE_*`: opciones de instalación,
+  operación, respaldo y ensayo de restauración.
 
 ## Módulos y permisos
 
