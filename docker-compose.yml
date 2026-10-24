@@ -20,12 +20,16 @@
 #   - APP_PORT en .env.production permite cambiar el puerto público.
 #   - Los datos de PostgreSQL viven en el volumen "pgdata" (persistente).
 #   - Los archivos subidos y logs viven en el volumen "storage" (persistente).
-#   - Para respaldar: docker compose exec postgres pg_dump -U eleam eleam > respaldo.sql
+#   - Para respaldar: docker compose exec postgres pg_dump --no-owner -U eleam eleam > respaldo.sql
+#   - El contenedor "app" incluye pg_dump y un scheduler para los respaldos
+#     automáticos a Google Drive.
 # =============================================================================
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # Si el volumen pgdata se creó con PostgreSQL 16, respalda la base y recrea
+    # el volumen antes de subir a 17: los archivos de datos no son compatibles.
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:-eleam}

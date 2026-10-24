@@ -17,7 +17,6 @@ set -euo pipefail
 
 APP_DIR="/var/www/eleam"
 DB_NOMBRE="eleam"
-DB_USUARIO="eleam"
 DESTINO="/var/backups/eleam"
 RETENCION_DIAS=30
 FECHA="$(date +%Y-%m-%d_%H-%M)"
@@ -25,7 +24,12 @@ FECHA="$(date +%Y-%m-%d_%H-%M)"
 mkdir -p "$DESTINO"
 
 echo "[ELEAM] Respaldando base de datos..."
-sudo -u postgres pg_dump -U "$DB_USUARIO" "$DB_NOMBRE" | gzip > "$DESTINO/base_$FECHA.sql.gz"
+sudo -u postgres pg_dump --no-owner --no-privileges --clean --if-exists "$DB_NOMBRE" | gzip > "$DESTINO/base_$FECHA.sql.gz"
+
+if [ ! -s "$DESTINO/base_$FECHA.sql.gz" ]; then
+    echo "[ELEAM] ERROR: el respaldo de la base quedó vacío." >&2
+    exit 1
+fi
 
 echo "[ELEAM] Respaldando archivos subidos..."
 tar -czf "$DESTINO/archivos_$FECHA.tar.gz" -C "$APP_DIR/storage" app 2>/dev/null || true

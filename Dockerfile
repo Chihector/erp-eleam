@@ -33,6 +33,7 @@ RUN apk add --no-cache \
         nginx \
         supervisor \
         postgresql-dev \
+        postgresql-client \
         icu-dev \
         libzip-dev \
         oniguruma-dev \
