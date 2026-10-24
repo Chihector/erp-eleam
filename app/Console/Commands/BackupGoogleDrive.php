@@ -2,25 +2,30 @@
 
 namespace App\Console\Commands;
 
+use App\Services\RespaldoBaseDatos;
 use Carbon\Carbon;
 use Google\Client;
 use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class BackupGoogleDrive extends Command
 {
     protected $signature = 'backup:google-drive
-                            {--database : Solo respaldar la base de datos SQLite}
+                            {--database : Solo respaldar la base de datos (SQLite o PostgreSQL)}
                             {--storage : Solo respaldar storage/ (logs, uploads, etc.)}
                             {--all : Respaldar todo (BD + storage + .env)}
                             {--dry-run : Simular sin subir a Drive}
                             {--folder-id= : ID de la carpeta en Google Drive (se configura en .env: GOOGLE_DRIVE_BACKUP_FOLDER_ID)}';
 
-    protected $description = 'Realiza backup diario a Google Drive (base de datos SQLite, storage, .env)';
+    protected $description = 'Realiza backup diario a Google Drive (base de datos SQLite/PostgreSQL, storage, .env)';
+
+    public function __construct(private readonly RespaldoBaseDatos $respaldo)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -47,57 +52,69 @@ class BackupGoogleDrive extends Command
         $timestamp = Carbon::now()->format('Y-m-d_H-i-s');
         $archivosASubir = [];
 
-        // 1. Base de datos SQLite
+        // 1. Base de datos (SQLite con VACUUM INTO o PostgreSQL con pg_dump)
         if ($todo || $soloDb || (! $soloDb && ! $soloStorage)) {
-            $dbPath = $this->rutaBaseDatosSqlite();
+            $driver = $this->respaldo->driver();
+            $conexion = config('database.default');
+            $database = config("database.connections.{$conexion}.database");
+            $sqliteEnMemoria = $driver === 'sqlite' && $database === ':memory:';
 
-            if ($dbPath === null) {
-                $conexion = config('database.default');
-                $driver = config("database.connections.{$conexion}.driver");
-                $database = config("database.connections.{$conexion}.database");
-                $sqliteEnMemoria = $driver === 'sqlite' && $database === ':memory:';
+            if (! in_array($driver, ['sqlite', 'pgsql'], true)) {
+                $this->error("Motor de base de datos no soportado para respaldo: {$driver}.");
+                $this->line('   Usa SQLite o PostgreSQL, o respalda la base con la herramienta del proveedor.');
 
-                // La suite usa SQLite en memoria. En modo prueba se simula el
-                // respaldo sin exigir un archivo que por definición no existe.
-                if ($dryRun && $sqliteEnMemoria) {
-                    $archivosASubir[] = [
-                        'origen' => ':memory:',
-                        'destino' => "backup_{$timestamp}_database.sqlite",
-                        'tipo' => 'database',
-                        'descripcion' => 'Base de datos SQLite en memoria (simulación)',
-                    ];
-                } else {
-                    $this->warn('El motor de base de datos configurado no es SQLite. Este comando solo puede respaldar SQLite; para PostgreSQL usa pg_dump o el respaldo del proveedor.');
+                return Command::FAILURE;
+            }
 
-                    // No simular ni reportar un respaldo completo si falta la base:
-                    // un respaldo parcial es más peligroso que un fallo explícito.
-                    if ($soloDb || $todo || (! $soloStorage && ! $todo)) {
-                        return Command::FAILURE;
-                    }
-                }
-            } elseif (File::exists($dbPath)) {
-                // Copiar el archivo SQLite directamente puede perder las
-                // transacciones que aún viven en el WAL. VACUUM INTO genera
-                // una copia consistente sin bloquear la base.
-                $snapshot = storage_path("framework/backup_{$timestamp}_database.sqlite");
-
-                if (! $this->crearSnapshotSqlite($dbPath, $snapshot)) {
-                    $this->error('No se pudo crear una copia consistente de la base SQLite.');
+            // La suite usa SQLite en memoria. En modo prueba se simula el
+            // respaldo sin exigir un archivo que por definición no existe.
+            if ($sqliteEnMemoria) {
+                if (! $dryRun) {
+                    $this->error('La base SQLite en memoria no se puede respaldar.');
 
                     return Command::FAILURE;
                 }
 
                 $archivosASubir[] = [
-                    'origen' => $snapshot,
+                    'origen' => ':memory:',
                     'destino' => "backup_{$timestamp}_database.sqlite",
                     'tipo' => 'database',
-                    'descripcion' => 'Base de datos SQLite (copia consistente)',
+                    'descripcion' => 'Base de datos SQLite en memoria (simulación)',
                 ];
             } else {
-                $this->warn("Base de datos no encontrada en: {$dbPath}");
+                $extension = $driver === 'pgsql' ? 'dump' : 'sqlite';
+                $snapshot = storage_path("framework/backup_{$timestamp}_database.{$extension}");
+                $descripcion = $driver === 'pgsql'
+                    ? 'Base de datos PostgreSQL (pg_dump)'
+                    : 'Base de datos SQLite (copia consistente)';
 
-                if ($soloDb || $todo || (! $soloStorage && ! $todo)) {
-                    return Command::FAILURE;
+                try {
+                    $this->respaldo->crearRespaldo($snapshot);
+
+                    $archivosASubir[] = [
+                        'origen' => $snapshot,
+                        'destino' => "backup_{$timestamp}_database.{$extension}",
+                        'tipo' => 'database',
+                        'descripcion' => $descripcion,
+                    ];
+                } catch (\Throwable $e) {
+                    if (! $dryRun) {
+                        $this->error('No se pudo respaldar la base de datos: '.$e->getMessage());
+
+                        return Command::FAILURE;
+                    }
+
+                    // En modo prueba no se exige pg_dump instalado: se informa
+                    // y se simula el archivo para validar el resto del flujo.
+                    $this->warn('No se pudo generar el respaldo real: '.$e->getMessage());
+                    $this->line('  [DRY-RUN] Se simula el respaldo de la base de datos.');
+
+                    $archivosASubir[] = [
+                        'origen' => ':simulado:',
+                        'destino' => "backup_{$timestamp}_database.{$extension}",
+                        'tipo' => 'database',
+                        'descripcion' => $descripcion.' (simulación)',
+                    ];
                 }
             }
         }
@@ -177,67 +194,6 @@ class BackupGoogleDrive extends Command
         $this->info("🎉 Backup completado: {$subidos}/".count($archivosASubir).' archivos subidos.');
 
         return $subidos === count($archivosASubir) ? Command::SUCCESS : Command::FAILURE;
-    }
-
-    /**
-     * Ruta del archivo SQLite de la conexión activa, o null si el motor no es
-     * SQLite. Así el respaldo usa la misma base que la aplicación y no una
-     * ruta fija que puede no existir en producción.
-     */
-    private function rutaBaseDatosSqlite(): ?string
-    {
-        $conexion = config('database.default');
-        $driver = config("database.connections.{$conexion}.driver");
-
-        if ($driver !== 'sqlite') {
-            return null;
-        }
-
-        $ruta = config("database.connections.{$conexion}.database");
-
-        if (! is_string($ruta) || trim($ruta) === '' || $ruta === ':memory:') {
-            return null;
-        }
-
-        $esAbsoluta = str_starts_with($ruta, '/')
-            || str_starts_with($ruta, '\\')
-            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $ruta) === 1;
-
-        return $esAbsoluta ? $ruta : base_path($ruta);
-    }
-
-    /**
-     * Crea una copia consistente de SQLite con VACUUM INTO. Copiar el archivo
-     * principal directamente puede omitir transacciones que siguen en el WAL.
-     */
-    private function crearSnapshotSqlite(string $origen, string $destino): bool
-    {
-        try {
-            if (File::exists($destino)) {
-                File::delete($destino);
-            }
-
-            $ruta = str_replace("'", "''", $destino);
-            DB::connection()->getPdo()->exec("VACUUM INTO '{$ruta}'");
-
-            if (! File::exists($destino) || File::size($destino) === 0) {
-                throw new \RuntimeException('El snapshot SQLite quedó vacío.');
-            }
-
-            return true;
-        } catch (\Throwable $e) {
-            File::delete($destino);
-
-            Log::channel('backup')->error('No se pudo crear el snapshot SQLite', [
-                'origen' => $origen,
-                'destino' => $destino,
-                'error' => $e->getMessage(),
-            ]);
-
-            $this->error('Error creando snapshot SQLite: '.$e->getMessage());
-
-            return false;
-        }
     }
 
     private function crearZip(string $origen, string $destino): void

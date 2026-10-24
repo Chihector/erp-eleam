@@ -46,6 +46,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Respaldo de PostgreSQL
+    |--------------------------------------------------------------------------
+    |
+    | El comando backup:google-drive usa pg_dump cuando DB_CONNECTION=pgsql.
+    | Si el binario no está en PATH, define PG_DUMP_PATH (y opcionalmente
+    | PG_RESTORE_PATH / PSQL_PATH) con la ruta absoluta del cliente.
+    |
+    */
+
+    'pgsql' => [
+        'pg_dump_path' => env('PG_DUMP_PATH'),
+        'pg_restore_path' => env('PG_RESTORE_PATH'),
+        'psql_path' => env('PSQL_PATH'),
+        'timeout' => env('PG_DUMP_TIMEOUT', 300),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Notificaciones
     |--------------------------------------------------------------------------
     */
