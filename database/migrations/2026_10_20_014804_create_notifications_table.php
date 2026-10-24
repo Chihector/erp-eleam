@@ -15,7 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('type');
             $table->morphs('notifiable');
-            $table->text('data');
+            // JSON portable: en SQLite se guarda como texto y en PostgreSQL
+            // como json, para que operadores como data->>'clave' funcionen.
+            $table->json('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
