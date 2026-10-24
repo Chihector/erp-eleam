@@ -45,3 +45,68 @@ jobs:
 
       - name: Ejecutar pruebas
         run: php artisan test
+
+  postgres-tests:
+    name: PHP 8.3 · PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: eleam_test
+          POSTGRES_USER: eleam
+          POSTGRES_PASSWORD: eleam_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U eleam -d eleam_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, curl, intl, mbstring, pdo_pgsql, pdo_sqlite, sqlite3, xml, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Configurar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Preparar entorno
+        run: cp .env.example .env
+
+      - name: Instalar dependencias PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generar clave de aplicación
+        run: php artisan key:generate
+
+      - name: Instalar y compilar assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Ejecutar migraciones en PostgreSQL
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: eleam_test
+          DB_USERNAME: eleam
+          DB_PASSWORD: eleam_ci
+        run: php artisan migrate:fresh --force
+
+      - name: Ejecutar pruebas en PostgreSQL
+        run: vendor/bin/phpunit -c phpunit.pgsql.xml
