@@ -6,6 +6,7 @@ use App\Mail\ReporteNotificacionesMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
@@ -60,6 +61,10 @@ class ComandosMantenimientoTest extends TestCase
 
     public function test_backup_google_drive_permite_simular_sin_credenciales(): void
     {
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            $this->markTestSkipped('El respaldo a Google Drive solo aplica a SQLite.');
+        }
+
         $this->artisan('backup:google-drive', [
             '--database' => true,
             '--dry-run' => true,

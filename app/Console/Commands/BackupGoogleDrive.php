@@ -7,6 +7,7 @@ use Google\Client;
 use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -75,12 +76,22 @@ class BackupGoogleDrive extends Command
                     }
                 }
             } elseif (File::exists($dbPath)) {
-                $destino = "backup_{$timestamp}_database.sqlite";
+                // Copiar el archivo SQLite directamente puede perder las
+                // transacciones que aún viven en el WAL. VACUUM INTO genera
+                // una copia consistente sin bloquear la base.
+                $snapshot = storage_path("framework/backup_{$timestamp}_database.sqlite");
+
+                if (! $this->crearSnapshotSqlite($dbPath, $snapshot)) {
+                    $this->error('No se pudo crear una copia consistente de la base SQLite.');
+
+                    return Command::FAILURE;
+                }
+
                 $archivosASubir[] = [
-                    'origen' => $dbPath,
-                    'destino' => $destino,
+                    'origen' => $snapshot,
+                    'destino' => "backup_{$timestamp}_database.sqlite",
                     'tipo' => 'database',
-                    'descripcion' => 'Base de datos SQLite completa',
+                    'descripcion' => 'Base de datos SQLite (copia consistente)',
                 ];
             } else {
                 $this->warn("Base de datos no encontrada en: {$dbPath}");
@@ -193,6 +204,40 @@ class BackupGoogleDrive extends Command
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $ruta) === 1;
 
         return $esAbsoluta ? $ruta : base_path($ruta);
+    }
+
+    /**
+     * Crea una copia consistente de SQLite con VACUUM INTO. Copiar el archivo
+     * principal directamente puede omitir transacciones que siguen en el WAL.
+     */
+    private function crearSnapshotSqlite(string $origen, string $destino): bool
+    {
+        try {
+            if (File::exists($destino)) {
+                File::delete($destino);
+            }
+
+            $ruta = str_replace("'", "''", $destino);
+            DB::connection()->getPdo()->exec("VACUUM INTO '{$ruta}'");
+
+            if (! File::exists($destino) || File::size($destino) === 0) {
+                throw new \RuntimeException('El snapshot SQLite quedó vacío.');
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            File::delete($destino);
+
+            Log::channel('backup')->error('No se pudo crear el snapshot SQLite', [
+                'origen' => $origen,
+                'destino' => $destino,
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->error('Error creando snapshot SQLite: '.$e->getMessage());
+
+            return false;
+        }
     }
 
     private function crearZip(string $origen, string $destino): void
