@@ -20,6 +20,9 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
   **120 pruebas y 427 aserciones aprobadas** (verificación 2026-10-24). Incluye
   previsión por trabajador, SIS, IUSC, cierre/reapertura, permisos, dashboard,
   notificaciones, reportes, respaldo simulado y CSV.
+- [x] Validar la suite contra **PostgreSQL 17**: 120 pruebas, 426 aserciones y
+  1 omitida (la prueba de respaldo Google Drive, que solo aplica a SQLite). La
+  validación destapó y corrigió el tipo JSON de `notifications.data`.
 - [ ] Confirmar con el usuario del negocio el alcance exacto de la entrega:
   demo, piloto interno o producción; qué módulos se usarán y quién los aprobará.
 - [ ] Obtener revisión laboral/contable de remuneraciones, licencias, vacaciones,
@@ -112,14 +115,19 @@ operativos definidos y aceptación legal/contable documentada. No usar
   respaldo en el instalador), más la actualización de las actions del CI.
 - Etiqueta publicada: **`v0.1.0`**, línea base probada. No implica validación
   legal ni autorización de producción.
-- PHP disponible: 8.2.12; SQLite habilitado.
+- PHP local: 8.2.12; SQLite y `pdo_pgsql` habilitados. El CI prueba PHP 8.2 con
+  SQLite y PHP 8.3 con PostgreSQL 17.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
-- Suite completa: **120 aprobadas, 427 aserciones** (verificación 2026-10-24).
-- GitHub Actions (**PHP 8.2 · SQLite**) ejecuta la suite en cada push o pull
-  request. La publicación inicial pasó en verde con 120/427.
-- Migraciones locales aplicadas, incluidas `notifications` y los campos P0 de
-  liquidaciones.
+- Suite completa SQLite: **120 aprobadas, 427 aserciones** (2026-10-24).
+- Suite completa PostgreSQL 17: **120 pruebas, 426 aserciones, 1 omitida**
+  (respaldo Google Drive, exclusivo de SQLite).
+- El respaldo SQLite ahora usa `VACUUM INTO` para obtener una copia consistente
+  y no perder transacciones que aún están en el WAL.
+- GitHub Actions ejecuta ambos motores en cada push o pull request. La
+  publicación inicial pasó en verde con 120/427 en SQLite.
+- Migraciones locales aplicadas, incluidas `notifications` (tipo JSON) y los
+  campos P0 de liquidaciones.
 - Pruebas nuevas relevantes:
   - `RemuneracionPrevisionalTest`: AFP propia, Isapre con plan y mínimo de 7 %,
     SIS fuera del líquido, contrato vigente y errores por datos faltantes.
@@ -156,7 +164,8 @@ operativos definidos y aceptación legal/contable documentada. No usar
   ausencias, topes y gratificación) sigue pendiente. El modo asistencia prorratea
   el sueldo mensual por días con marca; acordar esa regla antes de pagar. El
   respaldo a Google Drive solo cubre SQLite; con PostgreSQL usar `pg_dump` y
-  probar una restauración completa.
+  probar una restauración completa. PostgreSQL ya pasa la suite local y en CI,
+  pero falta el ensayo en un servidor/staging con datos y respaldo reales.
 
 ## Continuidad entre sesiones
 

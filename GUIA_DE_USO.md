@@ -433,7 +433,7 @@ php artisan reporte:notificaciones --periodo=semanal --email
 El PDF se guarda en `storage/app/reportes/`. La opción `--email` envía el reporte a los usuarios con rol **administrador**; requiere correo configurado.
 
 ### D. Respaldo a Google Drive
-El respaldo incluye la base SQLite, `storage/` y una copia del `.env` **sin secretos**. Para configurarlo:
+El respaldo incluye la base SQLite, `storage/` y una copia del `.env` **sin secretos**. La base se copia con `VACUUM INTO`, así que incluye las transacciones que todavía están en el WAL. Para configurarlo:
 
 > ⚠️ **Solo SQLite:** si el sistema usa PostgreSQL, este comando no respalda la
 > base de datos y falla de forma explícita al pedir `--all` o `--database`.

@@ -135,7 +135,7 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 - [x] Cálculo eficiente del saldo de vacaciones, sin consultas N+1 en listados y widgets.
 - [x] Notificaciones diarias por correo y en base de datos: contratos por vencer (30/15/7/3/1 días), vacaciones acumuladas y licencias médicas por vencer o vencidas.
 - [x] Reportes PDF semanales y mensuales de notificaciones, con envío opcional a administradores.
-- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite. **Solo respalda SQLite**: con PostgreSQL usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo fuera del servidor.
+- [x] Respaldo automático a Google Drive de SQLite, `storage/` y un `.env` sanitizado. La base se copia con `VACUUM INTO` para incluir las transacciones del WAL. Requiere credenciales y carpeta de Drive; si no están configuradas, la tarea programada se omite. **Solo respalda SQLite**: con PostgreSQL usa `deploy/respaldar.sh` o `pg_dump` y copia el respaldo fuera del servidor.
 - [x] Scheduler con tareas diarias, semanales y mensuales; comandos de mantenimiento `log:clear` y `db:optimize`. El instalador de servidor configura el cron de Laravel; en Docker o local hay que ejecutarlo aparte.
 - [x] Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos programados.
 
@@ -263,7 +263,16 @@ php artisan test --filter=NotificacionesDiariasTest
 php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base probada está etiquetada como `v0.1.0`.
+La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request, con dos jobs: **PHP 8.2 + SQLite** y **PHP 8.3 + PostgreSQL 17**. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base probada está etiquetada como `v0.1.0`.
+
+Para probar el motor de producción, con PostgreSQL disponible:
+
+```bash
+php artisan migrate:fresh --force
+vendor/bin/phpunit -c phpunit.pgsql.xml
+```
+
+`phpunit.pgsql.xml` usa `eleam_test` en `127.0.0.1:5432`; puedes cambiar host, puerto, base y credenciales con `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`.
 
 Si todavía no configuraste el entorno local, crea `.env` desde `.env.example`
 antes de ejecutar los tests. PHPUnit usa una clave de cifrado fija exclusiva

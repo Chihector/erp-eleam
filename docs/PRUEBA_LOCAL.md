@@ -97,6 +97,27 @@ SQLite local conserva los datos de prueba manual entre reinicios. No ejecutes
 `php artisan migrate:fresh` si quieres conservarlos: ese comando elimina todas
 las tablas y sus datos.
 
+### Probar con PostgreSQL
+
+Si tienes PostgreSQL disponible, crea una base **solo para pruebas** y ejecuta:
+
+```powershell
+$env:DB_CONNECTION="pgsql"
+$env:DB_HOST="127.0.0.1"
+$env:DB_PORT="5432"
+$env:DB_DATABASE="eleam_test"
+$env:DB_USERNAME="eleam"
+$env:DB_PASSWORD="tu-clave"
+
+php artisan migrate:fresh --force
+vendor/bin/phpunit -c phpunit.pgsql.xml
+```
+
+`phpunit.pgsql.xml` ya trae valores por defecto para CI. No apuntes
+`DB_DATABASE` a la base de producción: `migrate:fresh` borra todas las tablas.
+La prueba de respaldo a Google Drive se omite en PostgreSQL porque ese comando
+solo respalda SQLite; para PostgreSQL usa `deploy/respaldar.sh` o `pg_dump`.
+
 La QA visual local puede repetirse iniciando sesión y recorriendo el panel en el
 navegador; las pruebas automatizadas de `SeguridadTest` ya verifican los 403 y
 el acceso al PDF por rol.

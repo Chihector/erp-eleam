@@ -22,7 +22,10 @@ ni reportes oficiales.
   reportes PDF, respaldo a Google Drive, tareas programadas, IUSC, origen de días
   desde licencias/asistencias y cierre/reapertura de liquidaciones.
 - La rama `master` se publica en GitHub con la etiqueta `v0.1.0` y un workflow de
-  GitHub Actions que ejecuta la suite en cada push o pull request.
+  GitHub Actions que ejecuta la suite en SQLite (PHP 8.2) y PostgreSQL 17
+  (PHP 8.3) en cada push o pull request.
+- La validación en PostgreSQL obligó a guardar `notifications.data` como JSON;
+  las consultas `data->>` ya funcionan en ambos motores.
 - La aplicación y sus pruebas están implementadas en Laravel; los detalles de
   cobertura y el resultado verificable más reciente se registran en
   [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md).

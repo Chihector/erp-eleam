@@ -19,12 +19,14 @@ divergente. El repositorio local quedó limpio y sincronizado, con la etiqueta
 - Repositorio remoto: `https://github.com/chicohector953/Erp-eleam.git`.
 - Rama local y remota: `master`, sincronizadas.
 - Etiqueta publicada: `v0.1.0`.
-- PHP local: 8.2.12; cumple el requisito `^8.2`.
+- PHP local: 8.2.12; cumple el requisito `^8.2` y tiene `pdo_pgsql`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
-- Base local: SQLite; migraciones aplicadas, incluidas `notifications` y los
-  campos P0 de liquidaciones.
-- Suite completa: **120 pruebas aprobadas, 427 aserciones** (2026-10-24).
+- Base local: SQLite; migraciones aplicadas, incluidas `notifications` (JSON) y
+  los campos P0 de liquidaciones.
+- Suite SQLite: **120 pruebas aprobadas, 427 aserciones** (2026-10-24).
+- Suite PostgreSQL 17: **120 pruebas, 426 aserciones, 1 omitida** (respaldo
+  Google Drive, exclusivo de SQLite). Configuración: `phpunit.pgsql.xml`.
 - `.env` local y `database/database.sqlite` son datos locales ignorados por Git.
 - Administrador local: `admin@eleam.cl`. No hay contraseña fija en el código.
   Si no la conoces, restablécela con:
@@ -44,7 +46,8 @@ commit:
 - Notificaciones diarias de contratos, vacaciones y licencias médicas.
 - Reportes PDF semanales/mensuales de notificaciones y envío opcional por correo
   a administradores.
-- Respaldo a Google Drive de SQLite, `storage/` y `.env` sanitizado.
+- Respaldo a Google Drive de SQLite, `storage/` y `.env` sanitizado. La base se
+  copia con `VACUUM INTO` para incluir las transacciones del WAL.
 - Scheduler con tareas diarias, semanales y mensuales.
 - Comandos de mantenimiento `log:clear` y `db:optimize`.
 - Pruebas de dashboard, notificaciones, reportes, respaldo simulado y comandos
@@ -54,26 +57,35 @@ commit:
 - El 2026-10-24 se actualizaron las dependencias, se aplicaron las migraciones
   pendientes, se corrigió la prueba de respaldo, se agregó CI y se programó el
   scheduler/respaldo en el instalador de servidor.
+- Se validó la suite contra PostgreSQL 17. Eso destapó que `notifications.data`
+  era `text`; ahora es JSON y las consultas `data->>` funcionan en ambos motores.
+- El respaldo SQLite ya no copia el archivo vivo: genera un snapshot consistente
+  con `VACUUM INTO`.
 - La publicación de esa revisión quedó en `82db1fc`, `5eb47c5`, `178e2d9` y
   `249a7cd`, más la etiqueta `v0.1.0`. Después se actualizaron las actions del
   CI (`actions/checkout@v7`, `actions/setup-node@v7`).
 
 ## Validaciones ejecutadas
 
-- `php artisan test`: **120 pruebas aprobadas, 427 aserciones**.
+- `php artisan test`: **120 pruebas aprobadas, 427 aserciones** en SQLite.
+- `vendor/bin/phpunit -c phpunit.pgsql.xml`: **120 pruebas, 426 aserciones y
+  1 omitida** contra PostgreSQL 17 (la omitida es el respaldo Google Drive).
+- `php artisan migrate:fresh --force` contra PostgreSQL 17: correcto, incluida
+  la conversión de `notifications.data` a JSON.
 - `php artisan migrate --force`: migraciones legales, de notificaciones y campos
   P0 aplicadas en la SQLite local.
 - `php artisan schedule:list`: seis tareas registradas, todas con comandos
   existentes.
 - `php artisan notificaciones:diarias --dry-run`: correcto.
-- `php artisan backup:google-drive --database --dry-run`: correcto.
+- `php artisan backup:google-drive --database --dry-run`: correcto, con snapshot
+  consistente de SQLite.
 - `php artisan reporte:notificaciones --periodo=semanal --guardar`: PDF
   generado correctamente.
 - `php artisan log:clear`: correcto.
 - `php artisan db:optimize`: VACUUM y ANALYZE correctos en SQLite.
 - `vendor\bin\pint` y `git diff --check` se ejecutan antes de publicar.
-- GitHub Actions ejecutó la suite en PHP 8.2 con SQLite y pasó en verde con
-  **120 pruebas y 427 aserciones** sobre la publicación inicial.
+- GitHub Actions ejecuta dos jobs: **PHP 8.2 · SQLite** y
+  **PHP 8.3 · PostgreSQL 17**. El primero pasó en verde con 120/427.
 
 ## Automatización y configuración
 
@@ -133,8 +145,9 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
    esa revisión en el panel.
 3. Validar con el responsable laboral el tratamiento de licencias pendientes,
    ausencias y el prorrateo por asistencia antes de automatizar el pago.
-4. Ensayar PostgreSQL, respaldos/restauración y despliegue antes de un piloto
-   externo.
+4. Ensayar el despliegue real en PostgreSQL/staging, con migraciones desde una
+   versión anterior, respaldo y restauración antes de un piloto externo. La
+   suite ya pasa en PostgreSQL local y en CI, pero falta el servidor real.
 5. Configurar correo real y probar el envío de notificaciones y reportes.
 6. Configurar Google Drive en un entorno de ensayo y probar una restauración
    completa. El respaldo integrado solo cubre SQLite; con PostgreSQL usar
@@ -144,6 +157,7 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
 
 ```powershell
 php artisan test
+vendor/bin/phpunit -c phpunit.pgsql.xml
 php artisan test --filter=ComandosMantenimientoTest
 php artisan test --filter=LiquidacionP0Test
 php artisan test --filter=DashboardWidgetsTest
@@ -161,6 +175,11 @@ php artisan db:seed --class=DemoOperacionalSeeder
 php artisan route:list --path=admin
 php artisan serve --host=127.0.0.1 --port=8000
 ```
+
+`phpunit.pgsql.xml` espera PostgreSQL en `127.0.0.1:5432`, base `eleam_test`,
+usuario `eleam` y clave `eleam_ci`. Puedes cambiar host, puerto, base y
+credenciales con las variables `DB_HOST`, `DB_PORT`, `DB_DATABASE`,
+`DB_USERNAME` y `DB_PASSWORD`.
 
 Lee también:
 
