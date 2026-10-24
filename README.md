@@ -263,7 +263,7 @@ php artisan test --filter=NotificacionesDiariasTest
 php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md).
+La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base probada está etiquetada como `v0.1.0`.
 
 Si todavía no configuraste el entorno local, crea `.env` desde `.env.example`
 antes de ejecutar los tests. PHPUnit usa una clave de cifrado fija exclusiva

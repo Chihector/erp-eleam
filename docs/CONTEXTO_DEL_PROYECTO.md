@@ -19,7 +19,10 @@ ni reportes oficiales.
   de parámetros, AFP y salud por trabajador, plan Isapre en UF, SIS informativo
   del empleador, controles de acceso más estrictos y pruebas de CSV injection.
 - La integración posterior agrega dashboard operativo, notificaciones diarias,
-  reportes PDF, respaldo a Google Drive y tareas programadas.
+  reportes PDF, respaldo a Google Drive, tareas programadas, IUSC, origen de días
+  desde licencias/asistencias y cierre/reapertura de liquidaciones.
+- La rama `master` se publica en GitHub con la etiqueta `v0.1.0` y un workflow de
+  GitHub Actions que ejecuta la suite en cada push o pull request.
 - La aplicación y sus pruebas están implementadas en Laravel; los detalles de
   cobertura y el resultado verificable más reciente se registran en
   [HOJA_DE_RUTA.md](HOJA_DE_RUTA.md).

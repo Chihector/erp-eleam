@@ -105,17 +105,19 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 ## Verificación de esta revisión
 
-- Repositorio: **sincronizado con `origin/master` al inicio de esta revisión**.
-  La rama publicada es `master`; mantén una sola copia de trabajo canónica. Los
-  cambios de esta sesión quedaron en commits locales pendientes de publicar.
-- Últimos commits publicados: `38e6987` (tests completos y cierres de
-  remuneraciones), `7184ffc` (documentación) y `c28b05b` (Google Drive y tareas
-  programadas).
+- Repositorio: **publicado y sincronizado con `origin/master`**. La rama
+  publicada es `master`; mantén una sola copia de trabajo canónica.
+- Últimos commits de esta revisión: `82db1fc` (corrección del respaldo y suite
+  en verde), `5eb47c5` (documentación), `178e2d9` (CI) y `249a7cd` (scheduler y
+  respaldo en el instalador), más la actualización de las actions del CI.
+- Etiqueta publicada: **`v0.1.0`**, línea base probada. No implica validación
+  legal ni autorización de producción.
 - PHP disponible: 8.2.12; SQLite habilitado.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
 - Suite completa: **120 aprobadas, 427 aserciones** (verificación 2026-10-24).
-- Se agregó GitHub Actions para ejecutar la suite en cada push o pull request.
+- GitHub Actions (**PHP 8.2 · SQLite**) ejecuta la suite en cada push o pull
+  request. La publicación inicial pasó en verde con 120/427.
 - Migraciones locales aplicadas, incluidas `notifications` y los campos P0 de
   liquidaciones.
 - Pruebas nuevas relevantes:

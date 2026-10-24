@@ -11,12 +11,14 @@ vacaciones, licencias, finanzas, remuneraciones y finiquitos.
 El proyecto está **unificado en una sola rama publicada** (`master` en GitHub).
 La copia de trabajo actual es
 `Desktop\Nueva carpeta\repos-github\Erp-eleam`; evita mantener otra copia
-divergente. El repositorio local quedó limpio y sincronizado.
+divergente. El repositorio local quedó limpio y sincronizado, con la etiqueta
+`v0.1.0` publicada como línea base probada.
 
 ## Estado de código y entorno local
 
 - Repositorio remoto: `https://github.com/chicohector953/Erp-eleam.git`.
-- Rama local y remota: `master`.
+- Rama local y remota: `master`, sincronizadas.
+- Etiqueta publicada: `v0.1.0`.
 - PHP local: 8.2.12; cumple el requisito `^8.2`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
@@ -52,6 +54,9 @@ commit:
 - El 2026-10-24 se actualizaron las dependencias, se aplicaron las migraciones
   pendientes, se corrigió la prueba de respaldo, se agregó CI y se programó el
   scheduler/respaldo en el instalador de servidor.
+- La publicación de esa revisión quedó en `82db1fc`, `5eb47c5`, `178e2d9` y
+  `249a7cd`, más la etiqueta `v0.1.0`. Después se actualizaron las actions del
+  CI (`actions/checkout@v7`, `actions/setup-node@v7`).
 
 ## Validaciones ejecutadas
 
@@ -67,6 +72,8 @@ commit:
 - `php artisan log:clear`: correcto.
 - `php artisan db:optimize`: VACUUM y ANALYZE correctos en SQLite.
 - `vendor\bin\pint` y `git diff --check` se ejecutan antes de publicar.
+- GitHub Actions ejecutó la suite en PHP 8.2 con SQLite y pasó en verde con
+  **120 pruebas y 427 aserciones** sobre la publicación inicial.
 
 ## Automatización y configuración
 
