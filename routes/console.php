@@ -37,7 +37,8 @@ Schedule::command('backup:google-drive --all')
     ->dailyAt('02:00')
     ->timezone('America/Santiago')
     ->withoutOverlapping()
-    ->when(fn (): bool => filled(config('backup.google_drive.folder_id'))
+    ->when(fn (): bool => config('database.default') === 'sqlite'
+        && filled(config('backup.google_drive.folder_id'))
         && is_file((string) config('backup.google_drive.credentials_path')))
     ->description('Backup completo a Google Drive (base de datos, storage y .env sanitizado)')
     ->onSuccess(function () {

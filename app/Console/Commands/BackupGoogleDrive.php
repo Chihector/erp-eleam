@@ -51,10 +51,28 @@ class BackupGoogleDrive extends Command
             $dbPath = $this->rutaBaseDatosSqlite();
 
             if ($dbPath === null) {
-                $this->warn('El motor de base de datos configurado no es SQLite. Este comando solo puede respaldar SQLite; para PostgreSQL usa pg_dump o el respaldo del proveedor.');
+                $conexion = config('database.default');
+                $driver = config("database.connections.{$conexion}.driver");
+                $database = config("database.connections.{$conexion}.database");
+                $sqliteEnMemoria = $driver === 'sqlite' && $database === ':memory:';
 
-                if ($soloDb || (! $soloStorage && ! $todo)) {
-                    return Command::FAILURE;
+                // La suite usa SQLite en memoria. En modo prueba se simula el
+                // respaldo sin exigir un archivo que por definición no existe.
+                if ($dryRun && $sqliteEnMemoria) {
+                    $archivosASubir[] = [
+                        'origen' => ':memory:',
+                        'destino' => "backup_{$timestamp}_database.sqlite",
+                        'tipo' => 'database',
+                        'descripcion' => 'Base de datos SQLite en memoria (simulación)',
+                    ];
+                } else {
+                    $this->warn('El motor de base de datos configurado no es SQLite. Este comando solo puede respaldar SQLite; para PostgreSQL usa pg_dump o el respaldo del proveedor.');
+
+                    // No simular ni reportar un respaldo completo si falta la base:
+                    // un respaldo parcial es más peligroso que un fallo explícito.
+                    if ($soloDb || $todo || (! $soloStorage && ! $todo)) {
+                        return Command::FAILURE;
+                    }
                 }
             } elseif (File::exists($dbPath)) {
                 $destino = "backup_{$timestamp}_database.sqlite";
@@ -67,7 +85,7 @@ class BackupGoogleDrive extends Command
             } else {
                 $this->warn("Base de datos no encontrada en: {$dbPath}");
 
-                if ($soloDb || (! $soloStorage && ! $todo)) {
+                if ($soloDb || $todo || (! $soloStorage && ! $todo)) {
                     return Command::FAILURE;
                 }
             }

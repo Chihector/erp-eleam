@@ -66,6 +66,21 @@ class ComandosMantenimientoTest extends TestCase
         ])->assertSuccessful();
     }
 
+    public function test_backup_completo_falla_si_la_base_no_es_sqlite(): void
+    {
+        $conexionOriginal = config('database.default');
+        config(['database.default' => 'pgsql']);
+
+        try {
+            $this->artisan('backup:google-drive', [
+                '--all' => true,
+                '--dry-run' => true,
+            ])->assertFailed();
+        } finally {
+            config(['database.default' => $conexionOriginal]);
+        }
+    }
+
     public function test_reporte_de_notificaciones_se_genera(): void
     {
         $this->artisan('reporte:notificaciones', ['--periodo' => 'semanal'])
