@@ -20,6 +20,14 @@ $raiz = Split-Path -Parent $PSScriptRoot
 Set-Location $raiz
 
 function Buscar-Php {
+    $incluido = Join-Path $raiz 'runtime\php.exe'
+    if (Test-Path $incluido) {
+        $env:PHPRC = Join-Path $raiz 'runtime'
+        Remove-Item Env:\PHP_INI_SCAN_DIR -ErrorAction SilentlyContinue
+        $env:PATH = "$(Join-Path $raiz 'runtime');$env:PATH"
+        return $incluido
+    }
+
     $comando = Get-Command php.exe -ErrorAction SilentlyContinue
     if ($comando) {
         return $comando.Source
@@ -50,6 +58,15 @@ $log = Join-Path $storage 'logs\serve-windows.log'
 $err = Join-Path $storage 'logs\serve-windows.err.log'
 
 New-Item -ItemType Directory -Force -Path (Split-Path $pidFile), (Split-Path $log) | Out-Null
+
+$runtime = Join-Path $raiz 'runtime\php.exe'
+$marcaInstalacion = Join-Path $storage 'app\portable-installada'
+if ((Test-Path $runtime) -and -not (Test-Path $marcaInstalacion)) {
+    & (Join-Path $PSScriptRoot 'Instalar-ERP.ps1')
+    if (-not $?) {
+        throw 'Falló la instalación inicial del ERP portable.'
+    }
+}
 
 if (-not (Probar-Erp)) {
     $ocupado = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue

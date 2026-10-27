@@ -143,7 +143,37 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 
 ## 💻 Puesta en Marcha Rápida
 
-### 1. Iniciar el servidor local (para PC y teléfonos)
+### Paquete portable para Windows
+
+El paquete portable de preview incluye PHP, las dependencias y SQLite; en el
+PC de uso no necesitas instalar PHP, Composer ni Node.js. Para construirlo desde
+la carpeta del proyecto en el PC de desarrollo (con PHP 8.2+, Composer y Node.js
+instalados), ejecuta:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File windows\Preparar-ERP-Portatil.ps1
+```
+
+El archivo se genera en `dist\ERP-ELEAM-portable-preview.zip`. Copia el ZIP al
+PC de destino, extráelo en una carpeta donde tu usuario pueda escribir y abre
+`windows\Iniciar-ERP.bat`. En el primer inicio se crea la base, se aplican las
+migraciones y se solicita la información del administrador; la contraseña
+generada se muestra una sola vez. El panel queda en
+`http://127.0.0.1:8000/admin`; usa `windows\Detener-ERP.bat` para cerrar el
+servidor.
+
+Esta versión es solo para ese PC y no debe exponerse a la red ni a internet.
+El ZIP es un artefacto local ignorado por Git; las instrucciones y scripts sí
+forman parte del repositorio. Antes de distribuirlo, pruébalo en otro PC Windows
+limpio. Consulta la [guía de instalación portable](docs/INSTALACION_WINDOWS_PORTATIL.md)
+para los límites, copias de seguridad y demás pasos.
+
+### Servidor local para desarrollo y pruebas
+
+El siguiente modo requiere PHP y las dependencias del proyecto ya instaladas.
+Al enlazar con `0.0.0.0`, otros dispositivos de la misma red pueden conectarse;
+úsalo solo en una red de confianza y no lo expongas directamente a internet.
+
 ```bash
 php artisan serve --host=0.0.0.0 --port=8000
 ```
@@ -295,6 +325,7 @@ Para conocer a fondo el flujo de trabajo y uso diario del sistema, consulta la *
 ## 🧭 Contexto y entrega
 - [Contexto del proyecto](docs/CONTEXTO_DEL_PROYECTO.md) — arquitectura, módulos, límites de uso y cómo ejecutar pruebas.
 - [Hoja de ruta y preparación para entrega](docs/HOJA_DE_RUTA.md) — estado, prioridades de cierre y criterios para demo, piloto o producción.
+- [Instalación portable en Windows](docs/INSTALACION_WINDOWS_PORTATIL.md) — preparar, instalar y usar el paquete local.
 - [Prueba local en Windows](docs/PRUEBA_LOCAL.md) — preparación, acceso al navegador y cuenta local segura.
 - [Handoff para continuar con otra IA](docs/CONTINUAR_CON_IA.md) — cambios pendientes, pruebas, entorno y riesgos que debe conocer quien retome.
 

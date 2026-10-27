@@ -12,6 +12,71 @@ para emitir cálculos legales sin revisión.** Este repositorio no demuestra una
 instalación productiva ni una aprobación formal de los cálculos chilenos. El
 resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 
+## Dirección del proyecto
+
+El objetivo es avanzar en dos etapas: primero entregar una instalación sencilla
+y confiable en un PC con Windows; después, preparar el mismo sistema para
+usarlo por internet. La primera etapa se considera para **un PC y una base de
+datos local**. Si desde el inicio varias personas necesitan usarlo a la vez
+desde distintos equipos, hay que tratarlo como un servidor de red y no como una
+instalación individual.
+
+El lanzador actual (`windows\Iniciar-ERP.bat`) solo inicia el servidor local de
+Laravel y abre Edge desde la carpeta del proyecto. También existe un paquete
+portable de preview que incluye PHP y las dependencias. Se probó mediante una
+extracción limpia en el mismo PC donde se construyó; todavía no está validado
+en otro PC Windows limpio ni debe considerarse una versión de distribución.
+El servidor local no es multiusuario ni se debe exponer directamente a internet.
+
+### Etapa A — Instalable y confiable en un PC
+
+1. **Cerrar el alcance del primer uso:** confirmar la versión de Windows, si
+   será un único usuario/PC o si otros equipos deben conectarse, y quién será
+   responsable de los datos y las copias de seguridad.
+2. **Definir el paquete de instalación:** preparar una instalación guiada que
+   compruebe los requisitos o incluya un runtime compatible, instale el ERP,
+   cree la base SQLite en una ubicación persistente, ejecute las migraciones y
+   permita crear el primer administrador con contraseña generada.
+3. **Completar la operación diaria:** accesos directos para iniciar y detener,
+   inicio claro ante errores, ubicación visible de los datos y logs, y
+   documentación breve de acceso y cierre.
+4. **Proteger los datos:** configurar copias automáticas en otra ubicación,
+   indicar su retención y probar restaurar una copia. Las actualizaciones deben
+   respaldar antes de migrar y conservar los datos; la desinstalación debe
+   explicar qué pasará con la base y los archivos.
+5. **Probar en un PC limpio:** instalar, crear el administrador, recorrer los
+   módulos principales, reiniciar Windows, actualizar una versión y restaurar
+   un respaldo. No dar por lista la entrega hasta completar el ensayo sin
+   herramientas de desarrollo preinstaladas.
+
+**Salida de la etapa:** una versión etiquetada, guía de instalación/uso,
+procedimiento de actualización y recuperación probados, y aprobación del
+responsable del ELEAM. Antes de usar remuneraciones en pagos reales, completar
+la revisión laboral/contable indicada en P0.
+
+### Etapa B — Preparar el uso web
+
+1. **Revisar el piloto local:** corregir problemas reales de uso y confirmar
+   roles, soporte, retención de datos y responsables de operación.
+2. **Elegir y probar el destino web:** usar PostgreSQL y un despliegue mantenido
+   (VPS con HTTPS o Docker en un servidor); las guías existentes son un punto
+   de partida, no evidencia de una puesta en producción ya validada.
+3. **Planificar el traslado:** ensayar en una copia cómo mover los datos desde
+   el PC, incluidos adjuntos, usuarios y permisos. La migración SQLite a
+   PostgreSQL existente debe probarse con los datos del piloto. No asumir que
+   las dos instalaciones se sincronizan automáticamente.
+4. **Cerrar controles de producción:** dominio y HTTPS, secretos únicos,
+   acceso restringido, correo/alertas, respaldos externos y restauración
+   completa probada, actualizaciones con reversa y monitoreo.
+5. **Hacer un piloto web limitado:** probar concurrencia, acceso desde los
+   dispositivos reales, permisos, rendimiento y recuperación antes de ampliar
+   el uso.
+
+**Salida de la etapa:** sistema accesible por HTTPS desde los dispositivos
+autorizados, con PostgreSQL, operación y soporte asignados, respaldo externo
+restaurable y aceptación documentada. La publicación web es una fase posterior,
+no un requisito para terminar la instalación inicial en el PC.
+
 ## Prioridades
 
 ### P0 — Cerrar antes de entregar
@@ -58,6 +123,13 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 - [ ] Preparar un entorno de ensayo con el mismo motor de base de datos elegido
   para producción. Ejecutar migraciones, alta de administrador, flujos completos
   y una actualización desde una versión anterior.
+- [x] Preparar el paquete portable de preview para Windows, con runtime PHP
+  incluido, SQLite, migraciones y alta del primer administrador. Se verificó
+  instalación, inicio y parada mediante extracción limpia en el PC de
+  desarrollo.
+- [ ] Antes de distribuirlo, probarlo en otro PC Windows limpio sin
+  herramientas de desarrollo, incluyendo reinicio, copia/restauración y
+  actualización siguiendo la Etapa A.
 - [ ] Realizar y restaurar un respaldo de ensayo completo, incluyendo la base
   PostgreSQL y los archivos adjuntos, y copiarlo a un destino externo. Registrar
   dónde se guarda y quién puede recuperarlo. El ensayo automatizado de la base
@@ -71,6 +143,8 @@ resultado de las pruebas ejecutadas en esta revisión está registrado abajo.
 
 ### P1 — Completar para un piloto confiable
 
+- [ ] Completar primero el piloto local en un PC según la Etapa A; separar de
+  ese objetivo la puesta en marcha web futura.
 - [ ] Ejecutar una prueba de aceptación de punta a punta: trabajador/contrato,
   turno y asistencia, vacaciones/licencia, remuneración, PDF y exportación.
 - [ ] Acordar responsables y procedimientos de operación: alta/baja de
@@ -175,6 +249,12 @@ operativos definidos y aceptación legal/contable documentada. No usar
   pasan en local y CI.
 - Se agregó un lanzador de Windows (`windows\Iniciar-ERP.bat`) para probar el
   sistema como app con Edge, sin reemplazar el servidor web de producción.
+- Se generó `dist\ERP-ELEAM-portable-preview.zip`. La extracción de prueba
+  quedó con `APP_ENV=production` y `APP_DEBUG=false`; se verificaron las
+  migraciones SQLite, el alta del administrador, el enlace de archivos, las
+  respuestas HTTP de `/up` y `/admin` y la detención del servidor. El ZIP no
+  contiene `.env`, bases locales ni credenciales. Sigue pendiente probarlo en
+  otro PC Windows limpio antes de distribuirlo.
 - Docker usa PostgreSQL 17, incluye `pg_dump` y ejecuta el scheduler dentro del
   contenedor.
 

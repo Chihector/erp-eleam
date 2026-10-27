@@ -29,7 +29,7 @@ function Detener-Php([int]$IdProceso) {
         return $false
     }
 
-    taskkill.exe /PID $IdProceso /T /F | Out-Null
+    Stop-Process -Id $IdProceso -Force -ErrorAction Stop
     return $true
 }
 
