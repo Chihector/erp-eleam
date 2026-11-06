@@ -24,6 +24,13 @@ ni reportes oficiales.
 - La rama `master` se publica en GitHub con la etiqueta `v0.1.0` y un workflow de
   GitHub Actions que ejecuta la suite en SQLite (PHP 8.2) y PostgreSQL 17
   (PHP 8.3) en cada push o pull request.
+- **Verificación local 2026-11-04**: PostgreSQL 18.3 nativo en Windows validado con
+  129 tests y 493 aserciones, todos en verde. Incluye test real de `pg_dump`/`pg_restore`.
+- **Instalador de escritorio 2026-11-04**: `ERP-ELEAM-Setup-0.2.0.exe` (114 MB,
+  Inno Setup 6.7.3) compilado y probado en el PC de desarrollo, con datos
+  separados del programa, bandeja del sistema, respaldos automáticos y
+  actualizador con reversa. **Pendiente:** prueba en un PC Windows limpio y
+  firma digital. Ver [validación técnica](VALIDACION_TECNICA_2026-11-04.md).
 - La validación en PostgreSQL obligó a guardar `notifications.data` como JSON;
   las consultas `data->>` ya funcionan en ambos motores.
 - El respaldo a Google Drive soporta SQLite (`VACUUM INTO`) y PostgreSQL
@@ -52,7 +59,8 @@ ni reportes oficiales.
 | Autorización | Policies de Laravel y roles de Spatie Permission |
 | Reportes | DomPDF para documentos PDF; CSV para exportación de remuneraciones |
 | Frontend | Blade/Filament, CSS y JavaScript compilados con Vite |
-| Pruebas | PHPUnit con SQLite en memoria y PostgreSQL 17 (`phpunit.pgsql.xml`) |
+| Pruebas | PHPUnit con SQLite en memoria y PostgreSQL (`phpunit.pgsql.xml`; 18.3 verificado en Windows el 2026-11-04) |
+| Escritorio | Inno Setup; instalador `ERP-ELEAM-Setup-0.2.0.exe` (2026-11-04) |
 
 Directorios que conviene conocer:
 
@@ -66,7 +74,8 @@ Directorios que conviene conocer:
 - `routes/web.php` y `resources/views/pdf`: portada y descargas protegidas de
   PDF.
 - `tests/Feature` y `tests/Unit`: pruebas automatizadas.
-- `windows`: lanzador y detención del servidor local en Windows.
+- `windows`: lanzador y detención del servidor local e instalador de escritorio
+  (Inno Setup) para Windows.
 - `tests/e2e`: scripts heredados de QA visual; no forman parte de PHPUnit ni CI.
 - `deploy`, `docker-compose.yml` y `docs/DESPLIEGUE_*`: opciones de instalación,
   operación, respaldo y ensayo de restauración.

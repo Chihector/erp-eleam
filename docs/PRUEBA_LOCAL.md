@@ -121,8 +121,8 @@ $env:DB_CONNECTION="pgsql"
 $env:DB_HOST="127.0.0.1"
 $env:DB_PORT="5432"
 $env:DB_DATABASE="eleam_test"
-$env:DB_USERNAME="eleam"
-$env:DB_PASSWORD="tu-clave"
+$env:DB_USERNAME="postgres"
+$env:DB_PASSWORD="<clave local de postgres>"
 
 php artisan migrate:fresh --force
 vendor/bin/phpunit -c phpunit.pgsql.xml
@@ -136,6 +136,18 @@ lo restaura en una base temporal y compara tablas y migraciones. Necesita
 `pg_dump` y `pg_restore` en el PATH; si están instalados en otra ruta, define
 `PG_DUMP_PATH` y `PG_RESTORE_PATH`. El comando `backup:google-drive` también
 usa `pg_dump` cuando `DB_CONNECTION=pgsql`.
+
+**✅ Probado y verificado (2026-11-02, reverificado 2026-11-04):**
+- PostgreSQL 18.3 nativo en Windows (`C:\Program Files\PostgreSQL\18\`)
+- Extensiones PHP: `pdo_pgsql`, `pgsql` habilitadas en `php.ini`
+- **129 tests pasan** (493 aserciones, 0 omisiones) — incluye test de
+  `pg_dump`/`pg_restore`
+- **27 migraciones** aplicadas sin errores (incluidas `parametros_usados`)
+- Comandos artisan validados: `eleam:admin-crear`, `eleam:parametros-actualizar`,
+  `notificaciones:diarias`, `reporte:notificaciones`, `backup:google-drive`,
+  `backup-local`, `eleam:verificar-backup`, `db:optimize` (VACUUM ANALYZE),
+  `log:clear`
+- Autenticación segura: `scram-sha-256` (la clave es local y no se publica)
 
 La QA visual local puede repetirse iniciando sesión y recorriendo el panel en el
 navegador; las pruebas automatizadas de `SeguridadTest` ya verifican los 403 y

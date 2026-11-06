@@ -181,6 +181,10 @@ class RemuneracionService
                 'parametro_legal_id' => $parametroLegal->id,
                 'valor_uf_usado' => $parametroLegal->valor_uf,
                 'valor_utm_usado' => $parametroLegal->valor_utm,
+                'sueldo_minimo_usado' => $parametroLegal->sueldo_minimo,
+                'tope_afp_usado' => $parametroLegal->tope_imponible_afp,
+                'tope_ips_usado' => $parametroLegal->tope_imponible_ips,
+                'tope_cesantia_usado' => $parametroLegal->tope_imponible_cesantia,
                 'dias_trabajados' => $diasTrabajados,
                 'origen_dias' => $origenDias,
                 'sueldo_base' => $sueldoBaseProporcional,
@@ -276,10 +280,13 @@ class RemuneracionService
             throw new Exception('La liquidación ya está cerrada.');
         }
 
-        // Se exige que estén verificados los parámetros con los que realmente
-        // se calculó la liquidación, no solo los del período actual.
-        $parametro = $liquidacion->parametroLegal
-            ?? $this->parametroDelPeriodo((int) $liquidacion->mes, (int) $liquidacion->anio);
+        // Se exige que estén verificados los parámetros vigentes del período.
+        // Comparar contra el período actual (y no solo contra la fila usada)
+        // detecta tanto ediciones como reemplazos del registro de parámetros.
+        $parametro = $this->parametroDelPeriodo(
+            (int) $liquidacion->mes,
+            (int) $liquidacion->anio,
+        );
 
         if (! $parametro->estaVerificado()) {
             throw new Exception(
@@ -287,10 +294,12 @@ class RemuneracionService
             );
         }
 
-        if ($liquidacion->valor_utm_usado !== null
-            && (int) $liquidacion->valor_utm_usado !== (int) $parametro->valor_utm) {
+        $diferencias = $this->diferenciasDeParametros($liquidacion, $parametro);
+
+        if ($diferencias !== []) {
             throw new Exception(
-                'Los parámetros legales del período cambiaron después de calcular la liquidación. Recalcula antes de cerrar.',
+                'Los parámetros legales del período cambiaron después de calcular la liquidación ('
+                .implode(', ', $diferencias).'). Recalcula antes de cerrar.',
             );
         }
 
@@ -327,6 +336,54 @@ class RemuneracionService
         ]);
 
         return $liquidacion->refresh();
+    }
+
+    /**
+     * Compara la copia de parámetros guardada al calcular con los valores
+     * vigentes del período. Devuelve las etiquetas de los que cambiaron.
+     *
+     * @return list<string>
+     */
+    private function diferenciasDeParametros(Liquidacion $liquidacion, ParametroLegal $parametro): array
+    {
+        $diferencias = [];
+
+        if ($liquidacion->valor_uf_usado !== null
+            && round((float) $liquidacion->valor_uf_usado, 2) !== round((float) $parametro->valor_uf, 2)) {
+            $diferencias[] = 'UF';
+        }
+
+        if ($liquidacion->valor_utm_usado !== null
+            && (int) $liquidacion->valor_utm_usado !== (int) $parametro->valor_utm) {
+            $diferencias[] = 'UTM';
+        }
+
+        if ($liquidacion->sueldo_minimo_usado !== null
+            && (int) $liquidacion->sueldo_minimo_usado !== (int) $parametro->sueldo_minimo) {
+            $diferencias[] = 'sueldo mínimo';
+        }
+
+        if ($liquidacion->tope_afp_usado !== null
+            && round((float) $liquidacion->tope_afp_usado, 2) !== round((float) $parametro->tope_imponible_afp, 2)) {
+            $diferencias[] = 'tope AFP';
+        }
+
+        if ($liquidacion->tope_ips_usado !== null
+            && round((float) $liquidacion->tope_ips_usado, 2) !== round((float) $parametro->tope_imponible_ips, 2)) {
+            $diferencias[] = 'tope salud';
+        }
+
+        if ($liquidacion->tope_cesantia_usado !== null
+            && round((float) $liquidacion->tope_cesantia_usado, 2) !== round((float) $parametro->tope_imponible_cesantia, 2)) {
+            $diferencias[] = 'tope cesantía';
+        }
+
+        if ($liquidacion->sis_porcentaje !== null
+            && round((float) $liquidacion->sis_porcentaje, 2) !== round((float) $parametro->porcentaje_sis, 2)) {
+            $diferencias[] = 'SIS';
+        }
+
+        return $diferencias;
     }
 
     public function parametroDelPeriodo(int $mes, int $anio): ParametroLegal

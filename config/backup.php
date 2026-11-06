@@ -46,6 +46,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Respaldo local (sin Google Drive)
+    |--------------------------------------------------------------------------
+    |
+    | Para la instalación en un PC o servidor sin credenciales de Google.
+    | Guarda una carpeta por período con la base, storage/app y .env
+    | sanitizado. La retención se mide en días; 0 conserva todo.
+    |
+    */
+
+    'local' => [
+        'enabled' => env('BACKUP_LOCAL_ENABLED', true),
+        'path' => env('BACKUP_LOCAL_PATH', storage_path('app/backups')),
+        'retention_days' => env('BACKUP_LOCAL_RETENTION', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Respaldo de PostgreSQL
     |--------------------------------------------------------------------------
     |

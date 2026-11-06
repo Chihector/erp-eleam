@@ -1,6 +1,6 @@
 # Handoff para continuar ERP ELEAM con otra IA
 
-Fecha de actualización: 2026-10-24
+Fecha de actualización: 2026-11-04
 
 ## Resumen para retomar
 
@@ -8,26 +8,30 @@ ERP ELEAM es una aplicación Laravel 12 / Filament 5 para la operación de un
 ELEAM en Chile. Tiene módulos de trabajadores, contratos, turnos, asistencia,
 vacaciones, licencias, finanzas, remuneraciones y finiquitos.
 
-El proyecto está **unificado en una sola rama publicada** (`master` en GitHub).
-La copia de trabajo actual es
-`Desktop\Nueva carpeta\repos-github\Erp-eleam`; evita mantener otra copia
-divergente. El repositorio local quedó limpio y sincronizado, con la etiqueta
-`v0.1.0` publicada como línea base probada.
+El proyecto está **unificado en una sola rama** (`master` en GitHub).
+La copia de trabajo actual está en
+`C:\Users\hecto\OneDrive\Escritorio\Proyectos\Erp eleam`. Los cambios de las
+revisiones de octubre/noviembre **están sin commit ni push** en el árbol de
+trabajo; la última línea base publicada es la etiqueta `v0.1.0`.
 
 ## Estado de código y entorno local
 
 - Repositorio remoto: `https://github.com/chicohector953/Erp-eleam.git`.
-- Rama local y remota: `master`, sincronizadas.
+- Rama: `master` (la publicación en `origin/master` está **atrasada**: hay
+  cambios sin commit ni push de esta revisión).
 - Etiqueta publicada: `v0.1.0`.
 - PHP local: 8.2.12; cumple el requisito `^8.2` y tiene `pdo_pgsql`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
 - Base local: SQLite; migraciones aplicadas, incluidas `notifications` (JSON),
   los campos P0 y el soft delete de liquidaciones.
-- Suite SQLite: **121 pruebas aprobadas, 1 omitida y 435 aserciones**
-  (2026-10-24). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
-- Suite PostgreSQL 17: **122 pruebas y 441 aserciones**, sin omisiones.
-  Configuración: `phpunit.pgsql.xml`.
+- Suite SQLite: **128 pruebas aprobadas, 1 omitida y 487 aserciones**
+  (2026-11-04). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
+- Suite PostgreSQL 18.3 nativo en Windows: **129 pruebas y 493 aserciones**
+  (2026-11-04), sin omisiones. Configuración: `phpunit.pgsql.xml`.
+- PostgreSQL de ensayo: base `eleam_staging` en PostgreSQL 18.3, **27
+  migraciones** aplicadas (2026-11-04). Parámetros de noviembre de 2026 son de
+  ensayo, no valores legales vigentes.
 - `.env` local y `database/database.sqlite` son datos locales ignorados por Git.
 - Administrador local: `admin@eleam.cl`. No hay contraseña fija en el código.
   Si no la conoces, restablécela con:
@@ -76,17 +80,30 @@ commit:
   scheduler dentro del contenedor.
 - `deploy/respaldar.sh` usa `pg_dump` con `--no-owner --clean --if-exists` y se
   agregó `deploy/probar-restauracion.sh` para ensayar una restauración real.
+- El 2026-11-04 se compiló `dist\ERP-ELEAM-Setup-0.2.0.exe` (114 MB) con Inno
+  Setup y se probó en el PC de desarrollo: smoke test del flujo instalado
+  (servidor, `/up`, login, base fuera de la carpeta del programa, respaldo y
+  verificación), tarea programada y actualizador con reversa. Detalle en
+  [VALIDACION_TECNICA_2026-11-04.md](VALIDACION_TECNICA_2026-11-04.md).
+- Se agregaron `BackupLocal.php`, `VerificarBackup.php` y
+  `app/Support/EnvSanitizer.php`: respaldo local SQLite/PostgreSQL con
+  manifiesto SHA-256, verificación de restauración y `.env` sanitizado.
+- Se agregaron las pruebas `AceptacionFlujoCompletoTest` (flujo punta a punta:
+  trabajador, contrato, nómina, PDF y CSV) y `BackupLocalTest` (respaldo,
+  manifiesto manipulado y retención).
 
 ## Validaciones ejecutadas
 
-- `php artisan test`: **121 pruebas aprobadas, 1 omitida y 435 aserciones** en
-  SQLite.
-- `vendor/bin/phpunit -c phpunit.pgsql.xml`: **122 pruebas y 441 aserciones**
-  contra PostgreSQL 17, incluido el ensayo real de `pg_dump` + `pg_restore`.
-- `php artisan migrate:fresh --force` contra PostgreSQL 17: correcto, incluida
+- `php artisan test`: **128 pruebas aprobadas, 1 omitida y 487 aserciones** en
+  SQLite (2026-11-04).
+- `vendor/bin/phpunit -c phpunit.pgsql.xml`: **129 pruebas y 493 aserciones**
+  contra PostgreSQL 18.3 nativo en Windows, incluido el ensayo real de
+  `pg_dump` + `pg_restore` (2026-11-04).
+- `php artisan migrate:fresh --force` contra PostgreSQL: correcto, incluida
   la conversión de `notifications.data` a JSON.
 - `php artisan migrate --force`: migraciones legales, de notificaciones, campos
-  P0 y soft delete de liquidaciones aplicadas en la SQLite local.
+  P0, soft delete de liquidaciones y `parametros_usados` aplicadas en la SQLite
+  local y en `eleam_staging`.
 - `backup:google-drive --database --dry-run` con PostgreSQL: genera un `.dump`
   real, lo muestra y lo elimina al terminar.
 - `windows\Iniciar-ERP.ps1 -SinNavegador` y `windows\Detener-ERP.ps1`: el
@@ -167,11 +184,13 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
    esa revisión en el panel.
 3. Validar con el responsable laboral el tratamiento de licencias pendientes,
    ausencias y el prorrateo por asistencia antes de automatizar el pago.
-4. Ensayar el despliegue real en PostgreSQL/staging, con migraciones desde una
-   versión anterior, respaldo y restauración antes de un piloto externo. La
-   suite ya pasa en PostgreSQL local y en CI, pero falta el servidor real.
-5. Configurar correo real y probar el envío de notificaciones y reportes.
-6. Configurar Google Drive en un entorno de ensayo y probar una restauración
+4. Probar el instalador `ERP-ELEAM-Setup-0.2.0.exe` en otro PC Windows limpio
+   (reinicio, actualización y restauración de un respaldo). La suite ya pasa
+   en PostgreSQL local y en CI; falta el equipo limpio y el servidor real.
+5. Obtener firma digital para el ejecutable o documentar el aviso de
+   SmartScreen para los usuarios.
+6. Configurar correo real y probar el envío de notificaciones y reportes.
+7. Configurar Google Drive en un entorno de ensayo y probar una restauración
    completa con `deploy/probar-restauracion.sh` o `pg_restore`. El respaldo
    integrado ya cubre SQLite y PostgreSQL; igualmente hay que copiar el
    respaldo fuera del servidor y verificar la restauración periódicamente.
@@ -191,6 +210,8 @@ php artisan eleam:parametros-actualizar --mes=10 --anio=2026 --verificar --usuar
 php artisan notificaciones:diarias --dry-run
 php artisan reporte:notificaciones --periodo=semanal --guardar
 php artisan backup:google-drive --all --dry-run
+php artisan eleam:backup-local --destino=C:\ruta\respaldos --retencion=30
+php artisan eleam:verificar-backup C:\ruta\respaldos\2026-11-04_02-30-00
 php artisan schedule:work
 php artisan log:clear
 php artisan db:optimize

@@ -1,5 +1,11 @@
 # Instalación portable del ERP en Windows
 
+> **Nota (2026-11-04):** para el uso diario se recomienda el instalador de
+> escritorio [`ERP-ELEAM-Setup-0.2.0.exe`](INSTALACION_WINDOWS.md), que separa
+> programa y datos, incluye bandeja del sistema, respaldos automáticos y
+> actualizador. El paquete portable de esta guía sigue siendo un **preview**
+> sin actualizador automático.
+
 El paquete portable incluye el código de la aplicación, sus dependencias PHP y
 un runtime de PHP para Windows. En el PC de uso no se necesitan Composer, Node
 ni una instalación previa de PHP. El paquete utiliza SQLite y guarda los datos

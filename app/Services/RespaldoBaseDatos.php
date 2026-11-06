@@ -43,7 +43,9 @@ class RespaldoBaseDatos
             throw new \RuntimeException('No hay una base SQLite configurada para respaldar.');
         }
 
-        if (! File::exists($origen)) {
+        // VACUUM INTO también funciona sobre una base SQLite en memoria, que
+        // es la que usa la suite de pruebas.
+        if ($origen !== ':memory:' && ! File::exists($origen)) {
             throw new \RuntimeException('Base de datos SQLite no encontrada: '.$origen);
         }
 
@@ -192,8 +194,12 @@ class RespaldoBaseDatos
         $conexion = config('database.connections.'.config('database.default'), []);
         $ruta = $conexion['database'] ?? null;
 
-        if (! is_string($ruta) || trim($ruta) === '' || $ruta === ':memory:') {
+        if (! is_string($ruta) || trim($ruta) === '') {
             return null;
+        }
+
+        if ($ruta === ':memory:') {
+            return ':memory:';
         }
 
         $esAbsoluta = str_starts_with($ruta, '/')

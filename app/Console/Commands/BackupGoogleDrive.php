@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\RespaldoBaseDatos;
+use App\Support\EnvSanitizer;
 use Carbon\Carbon;
 use Google\Client;
 use Google\Service\Drive;
@@ -142,7 +143,7 @@ class BackupGoogleDrive extends Command
                 // Copiar y sanitizar (quitar secrets)
                 $envSanitizado = storage_path("app/backup_{$timestamp}_env.txt");
                 $contenido = File::get($envPath);
-                $contenidoSanitizado = $this->sanitizarEnv($contenido);
+                $contenidoSanitizado = EnvSanitizer::sanitizar($contenido);
                 File::put($envSanitizado, $contenidoSanitizado);
 
                 $archivosASubir[] = [
@@ -217,28 +218,6 @@ class BackupGoogleDrive extends Command
         }
 
         $zip->close();
-    }
-
-    private function sanitizarEnv(string $contenido): string
-    {
-        $lineas = explode("\n", $contenido);
-        $palabrasClave = ['KEY', 'SECRET', 'PASSWORD', 'TOKEN', 'PRIVATE'];
-
-        foreach ($lineas as $i => $linea) {
-            if (str_starts_with(trim($linea), '#') || ! str_contains($linea, '=')) {
-                continue;
-            }
-            [$clave] = explode('=', $linea, 2);
-            $clave = strtoupper(trim($clave));
-            foreach ($palabrasClave as $palabra) {
-                if (str_contains($clave, $palabra)) {
-                    $lineas[$i] = "{$clave}=***REDACTADO***";
-                    break;
-                }
-            }
-        }
-
-        return implode("\n", $lineas);
     }
 
     private function subirAGoogleDrive(string $archivoLocal, string $nombreRemoto, string $folderId, bool $dryRun): bool

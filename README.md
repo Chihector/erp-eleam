@@ -143,9 +143,29 @@ Sistema de gestión de personal, planificación de turnos, control de asistencia
 
 ## 💻 Puesta en Marcha Rápida
 
-### Paquete portable para Windows
+### Instalación en Windows (recomendada)
 
-El paquete portable de preview incluye PHP, las dependencias y SQLite; en el
+ERP ELEAM se instala como una aplicación de escritorio para **un PC con
+Windows 10/11 x64**: incluye su propio runtime PHP, no requiere instalar PHP,
+Composer ni Node, y guarda los datos fuera de la carpeta del programa. Desde
+2026-11-04 existe el instalador **`ERP-ELEAM-Setup-0.2.0.exe`**, compilado con
+Inno Setup y probado en el PC de desarrollo.
+
+1. Ejecuta `ERP-ELEAM-Setup-0.2.0.exe` (generado en `dist\`; ver
+   [instalación en Windows](docs/INSTALACION_WINDOWS.md) para construirlo y
+   usarlo).
+2. En el primer inicio se crean la base SQLite, las migraciones y el
+   administrador con una contraseña aleatoria que se muestra una sola vez.
+3. El panel queda disponible en `http://127.0.0.1:<puerto>/admin`; la bandeja
+   del sistema permite abrir, respaldar, actualizar y detener el servidor.
+
+Antes de distribuirlo a otros equipos, falta probarlo en un **PC Windows
+limpio** y firmar el ejecutable. Es una instalación para un solo PC; no la
+expongas a la red ni a internet.
+
+### Paquete portable para Windows (preview)
+
+También existe un paquete portable de preview que incluye PHP, las dependencias y SQLite; en el
 PC de uso no necesitas instalar PHP, Composer ni Node.js. Para construirlo desde
 la carpeta del proyecto en el PC de desarrollo (con PHP 8.2+, Composer y Node.js
 instalados), ejecuta:
@@ -302,7 +322,7 @@ php artisan test --filter=NotificacionesDiariasTest
 php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request, con dos jobs: **PHP 8.2 + SQLite** y **PHP 8.3 + PostgreSQL 17**. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base probada está etiquetada como `v0.1.0`.
+La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request, con dos jobs: **PHP 8.2 + SQLite** y **PHP 8.3 + PostgreSQL 17**. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base publicada está etiquetada como `v0.1.0`. **Reverificado el 2026-11-04: 128 pruebas aprobadas, 1 omitida y 487 aserciones en SQLite; 129 pruebas y 493 aserciones en PostgreSQL 18.3 nativo en Windows** (detalle en [validación técnica](docs/VALIDACION_TECNICA_2026-11-04.md)).
 
 Para probar el motor de producción, con PostgreSQL disponible:
 
@@ -325,6 +345,8 @@ Para conocer a fondo el flujo de trabajo y uso diario del sistema, consulta la *
 ## 🧭 Contexto y entrega
 - [Contexto del proyecto](docs/CONTEXTO_DEL_PROYECTO.md) — arquitectura, módulos, límites de uso y cómo ejecutar pruebas.
 - [Hoja de ruta y preparación para entrega](docs/HOJA_DE_RUTA.md) — estado, prioridades de cierre y criterios para demo, piloto o producción.
+- [Instalación en Windows](docs/INSTALACION_WINDOWS.md) — instalador de escritorio, uso diario, respaldos, actualización y desinstalación.
+- [Validación técnica 2026-11-04](docs/VALIDACION_TECNICA_2026-11-04.md) — pruebas, PostgreSQL de ensayo, respaldo/restauración, instalador y pendientes.
 - [Instalación portable en Windows](docs/INSTALACION_WINDOWS_PORTATIL.md) — preparar, instalar y usar el paquete local.
 - [Prueba local en Windows](docs/PRUEBA_LOCAL.md) — preparación, acceso al navegador y cuenta local segura.
 - [Handoff para continuar con otra IA](docs/CONTINUAR_CON_IA.md) — cambios pendientes, pruebas, entorno y riesgos que debe conocer quien retome.

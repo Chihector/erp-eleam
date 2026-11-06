@@ -33,11 +33,12 @@ Schedule::command('notificaciones:diarias')
     });
 
 // Backup a Google Drive: cada día a las 02:00, solo si está configurado.
+// Funciona tanto con SQLite como con PostgreSQL (pg_dump).
 Schedule::command('backup:google-drive --all')
     ->dailyAt('02:00')
     ->timezone('America/Santiago')
     ->withoutOverlapping()
-    ->when(fn (): bool => config('database.default') === 'sqlite'
+    ->when(fn (): bool => in_array(config('database.default'), ['sqlite', 'pgsql'], true)
         && filled(config('backup.google_drive.folder_id'))
         && is_file((string) config('backup.google_drive.credentials_path')))
     ->description('Backup completo a Google Drive (base de datos, storage y .env sanitizado)')
@@ -46,6 +47,21 @@ Schedule::command('backup:google-drive --all')
     })
     ->onFailure(function () {
         Log::channel('scheduler')->error('Error en backup Google Drive');
+    });
+
+// Respaldo local: cada día a las 02:30. Sirve para la instalación de
+// escritorio y para servidores sin Google Drive configurado.
+Schedule::command('eleam:backup-local')
+    ->dailyAt('02:30')
+    ->timezone('America/Santiago')
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('backup.local.enabled'))
+    ->description('Respaldo local de base de datos, storage/app y .env sanitizado')
+    ->onSuccess(function () {
+        Log::channel('scheduler')->info('Respaldo local completado');
+    })
+    ->onFailure(function () {
+        Log::channel('scheduler')->error('Error en respaldo local');
     });
 
 // Limpieza de logs antiguos: cada domingo a las 03:00.

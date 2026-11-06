@@ -23,10 +23,14 @@ instalación individual.
 
 El lanzador actual (`windows\Iniciar-ERP.bat`) solo inicia el servidor local de
 Laravel y abre Edge desde la carpeta del proyecto. También existe un paquete
-portable de preview que incluye PHP y las dependencias. Se probó mediante una
-extracción limpia en el mismo PC donde se construyó; todavía no está validado
-en otro PC Windows limpio ni debe considerarse una versión de distribución.
-El servidor local no es multiusuario ni se debe exponer directamente a internet.
+portable de preview que incluye PHP y las dependencias, y desde 2026-11-04 un
+instalador de escritorio (`ERP-ELEAM-Setup-0.2.0.exe`) que se instala por
+usuario, con datos separados del programa, bandeja del sistema, respaldos
+automáticos y actualizador con reversa. Ambos se probaron mediante una
+extracción/instalación limpia en el mismo PC donde se construyeron; todavía no
+están validados en otro PC Windows limpio ni deben considerarse versiones de
+distribución. El servidor local no es multiusuario ni se debe exponer
+directamente a internet.
 
 ### Etapa A — Instalable y confiable en un PC
 
@@ -82,13 +86,15 @@ no un requisito para terminar la instalación inicial en el PC.
 ### P0 — Cerrar antes de entregar
 
 - [x] Ejecutar la suite completa en SQLite en memoria y registrar el resultado:
-  **121 pruebas aprobadas, 1 omitida y 435 aserciones** (verificación
-  2026-10-24). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
+  **128 pruebas aprobadas, 1 omitida y 487 aserciones** (verificación
+  2026-11-04). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
   Incluye previsión por trabajador, SIS, IUSC, cierre/reapertura, permisos,
   dashboard, notificaciones, reportes, respaldo simulado y CSV.
 - [x] Validar la suite contra **PostgreSQL 17**: 122 pruebas y 441 aserciones,
-  sin omisiones. Incluye un ensayo real de `pg_dump` y restauración en una base
-  temporal. La validación destapó y corrigió el tipo JSON de `notifications.data`.
+  sin omisiones. **Reverificado el 2026-11-04 contra PostgreSQL 18.3 nativo en
+  Windows: 129 pruebas y 493 aserciones**; el ensayo real de `pg_dump` y
+  restauración en una base temporal también pasa. La validación destapó y
+  corrigió el tipo JSON de `notifications.data`.
 - [ ] Confirmar con el usuario del negocio el alcance exacto de la entrega:
   demo, piloto interno o producción; qué módulos se usarán y quién los aprobará.
 - [ ] Obtener revisión laboral/contable de remuneraciones, licencias, vacaciones,
@@ -120,13 +126,23 @@ no un requisito para terminar la instalación inicial en el PC.
 - [x] Probar los cuatro roles con datos representativos: lectura, creación,
   edición, eliminación y acceso directo a PDF/rutas. Se agregaron pruebas de
   403 en parámetros y usuarios, y de acceso al PDF por rol.
-- [ ] Preparar un entorno de ensayo con el mismo motor de base de datos elegido
-  para producción. Ejecutar migraciones, alta de administrador, flujos completos
-  y una actualización desde una versión anterior.
+- [x] Preparar un entorno de ensayo con el mismo motor de base de datos elegido
+  para producción: base `eleam_staging` en PostgreSQL 18.3 con **27
+  migraciones** aplicadas, alta de administrador, flujo de aceptación punta a
+  punta (`AceptacionFlujoCompletoTest`) y ensayo del actualizador (respaldo,
+  verificación, reemplazo solo de la carpeta de la aplicación, migraciones y
+  reversa) en el PC de desarrollo. Detalle en
+  [validación técnica 2026-11-04](VALIDACION_TECNICA_2026-11-04.md).
+  Falta repetir el ensayo en un PC Windows limpio.
 - [x] Preparar el paquete portable de preview para Windows, con runtime PHP
   incluido, SQLite, migraciones y alta del primer administrador. Se verificó
   instalación, inicio y parada mediante extracción limpia en el PC de
   desarrollo.
+- [x] Compilar el instalador `ERP-ELEAM-Setup-0.2.0.exe` con Inno Setup
+  (2026-11-04) y probarlo en el PC de desarrollo: smoke test del flujo
+  instalado (servidor, `/up`, login, base en la carpeta de datos, respaldo y
+  verificación), tarea programada y actualizador con reversa. Detalle en
+  [validación técnica 2026-11-04](VALIDACION_TECNICA_2026-11-04.md).
 - [ ] Antes de distribuirlo, probarlo en otro PC Windows limpio sin
   herramientas de desarrollo, incluyendo reinicio, copia/restauración y
   actualización siguiendo la Etapa A.
@@ -185,27 +201,33 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 ## Verificación de esta revisión
 
-- Repositorio: **publicado y sincronizado con `origin/master`**. La rama
-  publicada es `master`; mantén una sola copia de trabajo canónica.
-- La revisión anterior quedó en `82db1fc` (corrección del respaldo y suite en
-  verde), `5eb47c5` (documentación), `178e2d9` (CI) y `249a7cd` (scheduler y
-  respaldo en el instalador), más la actualización de las actions del CI.
-- Etiqueta publicada: **`v0.1.0`**, línea base probada. No implica validación
-  legal ni autorización de producción.
+- Fecha de esta revisión: **2026-11-04**. El detalle completo (pruebas,
+  PostgreSQL de ensayo, respaldo/restauración, instalador y pendientes) está en
+  [VALIDACION_TECNICA_2026-11-04.md](VALIDACION_TECNICA_2026-11-04.md).
+- Repositorio: los cambios de las revisiones de octubre/noviembre están **sin
+  commit ni push** en el árbol de trabajo; la última línea base publicada es
+  `v0.1.0` (`82db1fc`, `5eb47c5`, `178e2d9` y `249a7cd`, más la actualización
+  de las actions del CI). No implica validación legal ni autorización de
+  producción.
+- Etiqueta publicada: **`v0.1.0`**, línea base probada antes de esta revisión.
 - PHP local: 8.2.12; SQLite y `pdo_pgsql` habilitados. El CI prueba PHP 8.2 con
   SQLite y PHP 8.3 con PostgreSQL 17.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
-- Suite completa SQLite: **121 aprobadas, 1 omitida y 435 aserciones**
-  (2026-10-24).
-- Suite completa PostgreSQL 17: **122 pruebas y 441 aserciones**, sin omisiones.
+- Suite completa SQLite: **128 pruebas aprobadas, 1 omitida y 487 aserciones**
+  (2026-11-04).
+- Suite completa PostgreSQL 18.3 nativo Windows: **129 pruebas y 493
+  aserciones** (2026-11-04), sin omisiones, incluido el ensayo real de
+  `pg_dump`/`pg_restore`.
+- Migraciones: **27**, incluidas `notifications` (tipo JSON), los campos P0,
+  el soft delete de liquidaciones y `parametros_usados`.
 - El respaldo SQLite usa `VACUUM INTO` para obtener una copia consistente y no
   perder transacciones que aún están en el WAL. El respaldo PostgreSQL usa
   `pg_dump` en formato custom y `pg_restore` para recuperar.
 - GitHub Actions ejecuta ambos motores en cada push o pull request. El job
   PostgreSQL instala el cliente 17 y ejecuta el ensayo de restauración.
 - Migraciones locales aplicadas, incluidas `notifications` (tipo JSON), los
-  campos P0 y el soft delete de liquidaciones.
+  campos P0, el soft delete de liquidaciones y `parametros_usados`.
 - Pruebas nuevas relevantes:
   - `RemuneracionPrevisionalTest`: AFP propia, Isapre con plan y mínimo de 7 %,
     SIS fuera del líquido, contrato vigente y errores por datos faltantes.
@@ -226,6 +248,10 @@ operativos definidos y aceptación legal/contable documentada. No usar
     cierre/reapertura y borrado reversible de liquidaciones.
   - `EscenarioOperacionalDemoTest`, `PanelPaginasNuevasTest` y
     `PilotoRemuneraciones2026Test`: flujo operativo y regresión del panel.
+  - `AceptacionFlujoCompletoTest`: flujo de aceptación punta a punta
+    (trabajador, contrato, nómina, PDF y CSV).
+  - `BackupLocalTest` y `VerificarBackup`: respaldo SQLite/PostgreSQL,
+    manifiesto con hash, verificación y retención.
 - QA visual headless previa: `/admin`, `/admin/parametro-legals`,
   `/admin/trabajadors`, `/admin/gastos` y `/admin/liquidacions` responden 200,
   sin errores de consola ni requests fallidos. Un solo botón "Salir" visible en
@@ -255,6 +281,12 @@ operativos definidos y aceptación legal/contable documentada. No usar
   respuestas HTTP de `/up` y `/admin` y la detención del servidor. El ZIP no
   contiene `.env`, bases locales ni credenciales. Sigue pendiente probarlo en
   otro PC Windows limpio antes de distribuirlo.
+- El instalador `dist\ERP-ELEAM-Setup-0.2.0.exe` (compilado el 2026-11-04 con
+  Inno Setup 6.7.3) se probó en el PC de desarrollo: smoke test del flujo
+  instalado, base en la carpeta de datos, respaldo y verificación, tarea
+  programada y actualizador con reversa. **Pendiente: prueba en otro PC Windows
+  limpio y firma digital del ejecutable.** Ver
+  [validación técnica 2026-11-04](VALIDACION_TECNICA_2026-11-04.md).
 - Docker usa PostgreSQL 17, incluye `pg_dump` y ejecuta el scheduler dentro del
   contenedor.
 

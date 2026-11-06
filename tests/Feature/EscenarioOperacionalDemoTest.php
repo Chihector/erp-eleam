@@ -27,25 +27,32 @@ class EscenarioOperacionalDemoTest extends TestCase
 
     public function test_demo_seeder_es_idempotente(): void
     {
-        $seeder = app(DemoOperacionalSeeder::class);
-        $seeder->run();
-        $seeder->run();
+        $hoy = Carbon::parse('2026-10-22 12:00:00');
+        Carbon::setTestNow($hoy);
 
-        $trabajador = Trabajador::where('rut', '12345678-5')->firstOrFail();
+        try {
+            $seeder = app(DemoOperacionalSeeder::class);
+            $seeder->run();
+            $seeder->run();
 
-        $this->assertSame(1, Trabajador::count());
-        $contrato = Contrato::where('trabajador_id', $trabajador->id)->firstOrFail();
-        $this->assertSame(1, Contrato::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(42, $contrato->horas_semanales);
-        $this->assertSame(2, Turno::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(1, Asistencia::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(1, Vacacion::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame('2026-10-14', Vacacion::where('trabajador_id', $trabajador->id)->firstOrFail()->fecha_inicio->toDateString());
-        $this->assertSame(1, LicenciaMedica::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(1, Liquidacion::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(1, Finiquito::where('trabajador_id', $trabajador->id)->count());
-        $this->assertSame(1, Ingreso::count());
-        $this->assertSame(1, Gasto::count());
+            $trabajador = Trabajador::where('rut', '12345678-5')->firstOrFail();
+
+            $this->assertSame(1, Trabajador::count());
+            $contrato = Contrato::where('trabajador_id', $trabajador->id)->firstOrFail();
+            $this->assertSame(1, Contrato::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(42, $contrato->horas_semanales);
+            $this->assertSame(2, Turno::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(1, Asistencia::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(1, Vacacion::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame('2026-10-14', Vacacion::where('trabajador_id', $trabajador->id)->firstOrFail()->fecha_inicio->toDateString());
+            $this->assertSame(1, LicenciaMedica::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(1, Liquidacion::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(1, Finiquito::where('trabajador_id', $trabajador->id)->count());
+            $this->assertSame(1, Ingreso::count());
+            $this->assertSame(1, Gasto::count());
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_escenario_operacional_completo_con_datos_sinteticos(): void

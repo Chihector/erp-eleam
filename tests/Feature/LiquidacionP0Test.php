@@ -339,6 +339,62 @@ class LiquidacionP0Test extends TestCase
         $servicio->cerrar($liquidacion, $this->administrador);
     }
 
+    public function test_guarda_una_copia_completa_de_los_parametros_usados(): void
+    {
+        $parametro = $this->crearParametro(true);
+        $trabajador = $this->crearTrabajador();
+
+        $liquidacion = app(RemuneracionService::class)
+            ->calcularLiquidacion($trabajador, 10, 2026, 30);
+
+        $this->assertSame($parametro->id, $liquidacion->parametro_legal_id);
+        $this->assertSame(41057.20, (float) $liquidacion->valor_uf_usado);
+        $this->assertSame(72151, $liquidacion->valor_utm_usado);
+        $this->assertSame(553553, $liquidacion->sueldo_minimo_usado);
+        $this->assertSame(84.3, (float) $liquidacion->tope_afp_usado);
+        $this->assertSame(60.0, (float) $liquidacion->tope_ips_usado);
+        $this->assertSame(126.6, (float) $liquidacion->tope_cesantia_usado);
+        $this->assertSame(1.49, (float) $liquidacion->sis_porcentaje);
+    }
+
+    public function test_cierre_detecta_cambios_en_cada_parametro_legal(): void
+    {
+        $parametro = $this->crearParametro(true);
+        $trabajador = $this->crearTrabajador();
+        $servicio = app(RemuneracionService::class);
+        $liquidacion = $servicio->calcularLiquidacion($trabajador, 10, 2026, 30);
+
+        $cambios = [
+            'UF' => ['campo' => 'valor_uf', 'valor' => 42000.00],
+            'UTM' => ['campo' => 'valor_utm', 'valor' => 73000],
+            'sueldo mínimo' => ['campo' => 'sueldo_minimo', 'valor' => 560000],
+            'tope AFP' => ['campo' => 'tope_imponible_afp', 'valor' => 85.0],
+            'tope salud' => ['campo' => 'tope_imponible_ips', 'valor' => 61.0],
+            'tope cesantía' => ['campo' => 'tope_imponible_cesantia', 'valor' => 127.0],
+            'SIS' => ['campo' => 'porcentaje_sis', 'valor' => 1.5],
+        ];
+
+        foreach ($cambios as $etiqueta => $cambio) {
+            $original = $parametro->{$cambio['campo']};
+            $parametro->update([$cambio['campo'] => $cambio['valor']]);
+
+            try {
+                $servicio->cerrar($liquidacion, $this->administrador);
+                $this->fail("El cierre debió fallar al cambiar {$etiqueta}.");
+            } catch (Exception $e) {
+                $this->assertStringContainsString('cambiaron', $e->getMessage());
+                $this->assertStringContainsString($etiqueta, $e->getMessage());
+            }
+
+            $parametro->update([$cambio['campo'] => $original]);
+            $liquidacion = $servicio->calcularLiquidacion($trabajador, 10, 2026, 30);
+        }
+
+        // Con todos los parámetros restaurados, el cierre debe funcionar.
+        $servicio->cerrar($liquidacion, $this->administrador);
+        $this->assertTrue($liquidacion->fresh()->cerrada);
+    }
+
     public function test_permisos_de_cierre_y_reapertura(): void
     {
         $this->crearParametro(true);

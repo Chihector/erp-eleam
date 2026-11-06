@@ -209,13 +209,24 @@ extension=zip
         Remove-Item -LiteralPath $archivoZip -Force
     }
 
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::CreateFromDirectory(
-        $paquete,
-        $archivoZip,
-        [System.IO.Compression.CompressionLevel]::Fastest,
-        $false
-    )
+    # tar.exe produce un ZIP estandar (rutas con /) y es mucho mas rapido que
+    # Compress-Archive o ZipFile con miles de archivos.
+    $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
+    if (Test-Path $tar) {
+        & $tar -a -c -f $archivoZip -C $paquete .
+        if ($LASTEXITCODE -ne 0) {
+            throw "tar no pudo crear el paquete portable (codigo $LASTEXITCODE)."
+        }
+    }
+    else {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::CreateFromDirectory(
+            $paquete,
+            $archivoZip,
+            [System.IO.Compression.CompressionLevel]::Fastest,
+            $false
+        )
+    }
 
     Write-Host "Paquete portable creado: $archivoZip" -ForegroundColor Green
 }
