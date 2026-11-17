@@ -31,9 +31,11 @@ Detalle en [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
 - Suite SQLite: **128 pruebas aprobadas, 1 omitida y 487 aserciones**
   (2026-11-04). La omitida es el ensayo de `pg_dump`, exclusivo de PostgreSQL.
 - Suite PostgreSQL 18.3 nativo en Windows: **129 pruebas y 493 aserciones**
-  (2026-11-04), sin omisiones. Configuración: `phpunit.pgsql.xml`.
-- PostgreSQL de ensayo: base `eleam_staging` en PostgreSQL 18.3, **27
-  migraciones** aplicadas (2026-11-04). Parámetros de noviembre de 2026 son de
+  (2026-11-04), sin omisiones. Configuración: `phpunit.pgsql.xml`. Revalidada el
+  **2026-11-17** sobre el commit publicado `83645c5`: `migrate:fresh --force`
+  (27 migraciones) + suite en verde, con `pg_dump`/`pg_restore` real.
+- PostgreSQL de ensayo: bases `eleam_staging` y `eleam_test` en PostgreSQL
+  18.3, **27 migraciones** aplicadas en ambas (verificado 2026-11-17). Parámetros de noviembre de 2026 son de
   ensayo, no valores legales vigentes.
 - `.env` local y `database/database.sqlite` son datos locales ignorados por Git.
 - Administrador local: `admin@eleam.cl`. No hay contraseña fija en el código.

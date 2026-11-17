@@ -51,15 +51,26 @@ en el cálculo. Incluye la suite automatizada en verde en SQLite y PostgreSQL.
 | Área | Resultado | Evidencia |
 | --- | --- | --- |
 | Suite SQLite | 128 aprobadas, 1 omitida, 487 aserciones | `php artisan test` (repetido 2026-11-17) |
-| Suite PostgreSQL | 129 aprobadas, 493 aserciones | `vendor/bin/phpunit -c phpunit.pgsql.xml`, 2026-11-04 en PG 18.3 |
+| Suite PostgreSQL | 129 aprobadas, 493 aserciones | `vendor/bin/phpunit -c phpunit.pgsql.xml`, 2026-11-04 y revalidado el 2026-11-17 en PG 18.3 sobre `83645c5` |
 | CI | Ambos jobs en verde | GitHub Actions run `42226018600`, PHP 8.2/SQLite y PHP 8.3/PG 17 |
 | Migraciones | 27 aplicadas | SQLite y PostgreSQL |
 | Flujo punta a punta | Verde | `AceptacionFlujoCompletoTest` |
 | Respaldo/restauración | Verde | `BackupLocalTest`, `RespaldoPostgresTest` |
 
-> La validación local documentada usa PostgreSQL 18.3 y CI usa PostgreSQL 17;
-> ambas combinaciones pasan. No hay una certificación legal ni contable detrás
-> de estos resultados.
+### Entorno PostgreSQL (servidor / staging)
+
+- Servicio `postgresql-x64-18`, PostgreSQL 18.3 en `127.0.0.1:5432`.
+- Bases `eleam_test` (pruebas) y `eleam_staging` (ensayo), ambas con **27
+  migraciones** aplicadas.
+- Usuario de pruebas `eleam`; la credencial `eleam_ci` vive solo en
+  `phpunit.pgsql.xml` y en el CI. No reutilizar en producción.
+- Revalidación del 2026-11-17 sobre el commit publicado `83645c5`:
+  `php artisan migrate:fresh --force` + `vendor/bin/phpunit -c phpunit.pgsql.xml`
+  → **OK (129 tests, 493 assertions)**, incluido `pg_dump`/`pg_restore` real.
+
+> La validación local usa PostgreSQL 18.3 y CI usa PostgreSQL 17; ambas
+> combinaciones pasan. No hay una certificación legal ni contable detrás de
+> estos resultados.
 
 ## Código y publicación
 

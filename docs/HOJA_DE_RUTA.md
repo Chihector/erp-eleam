@@ -225,8 +225,9 @@ operativos definidos y aceptación legal/contable documentada. No usar
   (2026-11-04, repetido el 2026-11-17).
 - Suite completa PostgreSQL 18.3 nativo Windows: **129 pruebas y 493
   aserciones** (2026-11-04), sin omisiones, incluido el ensayo real de
-  `pg_dump`/`pg_restore`. CI ejecuta la misma suite con PostgreSQL 17 y
-  ambos jobs del run `42226018600` terminaron en verde.
+  `pg_dump`/`pg_restore`. Revalidada el **2026-11-17** sobre el commit publicado
+  `83645c5` tras `migrate:fresh --force` (27 migraciones). CI ejecuta la misma
+  suite con PostgreSQL 17 y ambos jobs del run `42226018600` terminaron en verde.
 - Migraciones: **27**, incluidas `notifications` (tipo JSON), los campos P0,
   el soft delete de liquidaciones y `parametros_usados`.
 - El respaldo SQLite usa `VACUUM INTO` para obtener una copia consistente y no
