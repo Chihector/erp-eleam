@@ -201,24 +201,32 @@ operativos definidos y aceptación legal/contable documentada. No usar
 
 ## Verificación de esta revisión
 
-- Fecha de esta revisión: **2026-11-04**. El detalle completo (pruebas,
-  PostgreSQL de ensayo, respaldo/restauración, instalador y pendientes) está en
-  [VALIDACION_TECNICA_2026-11-04.md](VALIDACION_TECNICA_2026-11-04.md).
-- Repositorio: los cambios de las revisiones de octubre/noviembre están **sin
-  commit ni push** en el árbol de trabajo; la última línea base publicada es
-  `v0.1.0` (`82db1fc`, `5eb47c5`, `178e2d9` y `249a7cd`, más la actualización
-  de las actions del CI). No implica validación legal ni autorización de
+- Fecha de la validación técnica: **2026-11-04**. Actualización de entrega:
+  **2026-11-17**. El detalle completo (pruebas, PostgreSQL de ensayo,
+  respaldo/restauración, instalador y pendientes) está en
+  [VALIDACION_TECNICA_2026-11-04.md](VALIDACION_TECNICA_2026-11-04.md) y el
+  resumen publicado en [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
+- Repositorio: el trabajo funcional quedó en el commit `129358f` (*feat: backups
+  locales, instalador Windows y mejoras de liquidaciones*) y la documentación
+  de entrega en el commit apuntado por la etiqueta. `master` está **publicado y
+  sincronizado en los dos remotos**: `Chihector/erp-eleam` y
+  `chicohector953/Erp-eleam`. No implica validación legal ni autorización de
   producción.
-- Etiqueta publicada: **`v0.1.0`**, línea base probada antes de esta revisión.
+- Etiqueta publicada: **`v0.2.0`**, con GitHub Release en ambos repositorios.
+- Artefactos: los binarios de `dist/` se construyeron el 2026-11-04 con
+  `HEAD=33bd5c8`, por lo que su `version.json` no apunta a `v0.2.0`. Deben
+  reconstruirse desde la etiqueta antes de distribuirse; hashes y detalle en
+  [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
 - PHP local: 8.2.12; SQLite y `pdo_pgsql` habilitados. El CI prueba PHP 8.2 con
   SQLite y PHP 8.3 con PostgreSQL 17.
 - Entorno local preparado en `http://127.0.0.1:8000/admin`, con SQLite y assets
   compilados.
 - Suite completa SQLite: **128 pruebas aprobadas, 1 omitida y 487 aserciones**
-  (2026-11-04).
+  (2026-11-04, repetido el 2026-11-17).
 - Suite completa PostgreSQL 18.3 nativo Windows: **129 pruebas y 493
   aserciones** (2026-11-04), sin omisiones, incluido el ensayo real de
-  `pg_dump`/`pg_restore`.
+  `pg_dump`/`pg_restore`. CI ejecuta la misma suite con PostgreSQL 17 y
+  ambos jobs del run `42226018600` terminaron en verde.
 - Migraciones: **27**, incluidas `notifications` (tipo JSON), los campos P0,
   el soft delete de liquidaciones y `parametros_usados`.
 - El respaldo SQLite usa `VACUUM INTO` para obtener una copia consistente y no

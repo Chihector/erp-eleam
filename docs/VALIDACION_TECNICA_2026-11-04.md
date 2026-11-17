@@ -160,8 +160,12 @@ restauración de un respaldo.
    requieren el despliegue web con PostgreSQL, HTTPS y respaldos externos.
 6. **Respaldo externo:** copiar los respaldos fuera del equipo y ensayar la
    restauración completa con adjuntos.
-7. **Commit y etiqueta:** los cambios de esta revisión están en el árbol de
-   trabajo; no se ha hecho commit ni push.
+7. **Commit y etiqueta:** el trabajo funcional se publicó en `129358f` y la
+   documentación de entrega en el commit apuntado por `v0.2.0`, con push a
+   `Chihector/erp-eleam` y `chicohector953/Erp-eleam` y GitHub Release en
+   ambos. Los artefactos de `dist/` son anteriores al commit (`HEAD=33bd5c8`
+   al compilarse), por lo que deben reconstruirse desde la etiqueta; hashes y
+   detalle en [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
 
 ## 9. Evidencia reproducible
 
@@ -185,3 +189,6 @@ powershell -ExecutionPolicy Bypass -File windows\Instalador\TareaProgramada.ps1 
 | Aceptación del usuario |  |  |  |
 
 Las casillas vacías deben completarse antes de considerar la entrega aprobada.
+A la fecha de publicación de `v0.2.0` (2026-11-17) siguen vacías: la validación
+técnica está documentada, pero la revisión laboral/contable y la aceptación del
+usuario son tareas humanas pendientes.

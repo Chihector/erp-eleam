@@ -21,16 +21,22 @@ ni reportes oficiales.
 - La integración posterior agrega dashboard operativo, notificaciones diarias,
   reportes PDF, respaldo a Google Drive, tareas programadas, IUSC, origen de días
   desde licencias/asistencias y cierre/reapertura de liquidaciones.
-- La rama `master` se publica en GitHub con la etiqueta `v0.1.0` y un workflow de
+- La rama `master` se publica en GitHub (en `Chihector/erp-eleam` y
+  `chicohector953/Erp-eleam`) con la etiqueta **`v0.2.0`** y un workflow de
   GitHub Actions que ejecuta la suite en SQLite (PHP 8.2) y PostgreSQL 17
-  (PHP 8.3) en cada push o pull request.
+  (PHP 8.3) en cada push o pull request. Las notas de la versión están en
+  [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
 - **Verificación local 2026-11-04**: PostgreSQL 18.3 nativo en Windows validado con
   129 tests y 493 aserciones, todos en verde. Incluye test real de `pg_dump`/`pg_restore`.
-- **Instalador de escritorio 2026-11-04**: `ERP-ELEAM-Setup-0.2.0.exe` (114 MB,
+- **Instalador de escritorio 2026-11-04**: `ERP-ELEAM-Setup-0.2.0.exe` (24,7 MB,
   Inno Setup 6.7.3) compilado y probado en el PC de desarrollo, con datos
   separados del programa, bandeja del sistema, respaldos automáticos y
   actualizador con reversa. **Pendiente:** prueba en un PC Windows limpio y
-  firma digital. Ver [validación técnica](VALIDACION_TECNICA_2026-11-04.md).
+  firma digital. Los binarios se construyeron con `HEAD=33bd5c8`, anteriores al
+  commit funcional `129358f`: hay que reconstruirlos desde `v0.2.0` y
+  actualizar los hashes de `CHECKSUMS.sha256`. Ver
+  [validación técnica](VALIDACION_TECNICA_2026-11-04.md) y
+  [notas de lanzamiento](RELEASE_NOTES_0.2.0.md).
 - La validación en PostgreSQL obligó a guardar `notifications.data` como JSON;
   las consultas `data->>` ya funcionan en ambos motores.
 - El respaldo a Google Drive soporta SQLite (`VACUUM INTO`) y PostgreSQL

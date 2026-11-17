@@ -1,0 +1,7 @@
+# SHA-256 de los artefactos construidos en la máquina de desarrollo (2026-11-04).
+# dist/ esta excluido por .gitignore; estos archivos no estan en un checkout limpio.
+# Advertencia: los binarios se construyeron con HEAD=33bd5c8 y deben reconstruirse
+# desde la etiqueta v0.2.0 antes de distribuirse. Ver docs/RELEASE_NOTES_0.2.0.md.
+4445b173f05e0dc204447d39b77bafce5747403fc6c5494e8ef1b096ae2e8894 *dist/ERP-ELEAM-Setup-0.2.0.exe
+b21af7ec442fac20abe1139e53bba6be1e2564b45f05ef522c76638323bfc33a *dist/ERP-ELEAM-portable-0.2.0.zip
+273b2b2ac1fe29943d2819bb3d0bebd3a8e541bc4fcf3065e7058a561710cf18 *dist/ERP-ELEAM-portable-preview.zip

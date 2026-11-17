@@ -1,6 +1,6 @@
 # Handoff para continuar ERP ELEAM con otra IA
 
-Fecha de actualización: 2026-11-04
+Fecha de actualización: 2026-11-17
 
 ## Resumen para retomar
 
@@ -8,18 +8,21 @@ ERP ELEAM es una aplicación Laravel 12 / Filament 5 para la operación de un
 ELEAM en Chile. Tiene módulos de trabajadores, contratos, turnos, asistencia,
 vacaciones, licencias, finanzas, remuneraciones y finiquitos.
 
-El proyecto está **unificado en una sola rama** (`master` en GitHub).
+El proyecto está **unificado en una sola rama** (`master` en GitHub), publicada
+y sincronizada en `Chihector/erp-eleam` y `chicohector953/Erp-eleam`.
 La copia de trabajo actual está en
-`C:\Users\hecto\OneDrive\Escritorio\Proyectos\Erp eleam`. Los cambios de las
-revisiones de octubre/noviembre **están sin commit ni push** en el árbol de
-trabajo; la última línea base publicada es la etiqueta `v0.1.0`.
+`C:\Users\hecto\OneDrive\Escritorio\Proyectos\Erp eleam`. El trabajo funcional
+quedó en el commit `129358f` y la documentación de entrega en el commit
+apuntado por la etiqueta **`v0.2.0`**, con GitHub Release en ambos repositorios.
+Detalle en [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md).
 
 ## Estado de código y entorno local
 
-- Repositorio remoto: `https://github.com/chicohector953/Erp-eleam.git`.
-- Rama: `master` (la publicación en `origin/master` está **atrasada**: hay
-  cambios sin commit ni push de esta revisión).
-- Etiqueta publicada: `v0.1.0`.
+- Repositorios remotos (ambos alineados con local):
+  `https://github.com/Chihector/erp-eleam.git` (upstream, `chihector`) y
+  `https://github.com/chicohector953/Erp-eleam.git` (`origin`).
+- Rama: `master`, sin commits pendientes de push.
+- Etiqueta publicada: `v0.2.0` (Release en ambos repositorios).
 - PHP local: 8.2.12; cumple el requisito `^8.2` y tiene `pdo_pgsql`.
 - Dependencias instaladas en `vendor/`, incluido `google/apiclient`.
 - Frontend instalado y assets compilados en `public/build/`.
@@ -80,7 +83,7 @@ commit:
   scheduler dentro del contenedor.
 - `deploy/respaldar.sh` usa `pg_dump` con `--no-owner --clean --if-exists` y se
   agregó `deploy/probar-restauracion.sh` para ensayar una restauración real.
-- El 2026-11-04 se compiló `dist\ERP-ELEAM-Setup-0.2.0.exe` (114 MB) con Inno
+- El 2026-11-04 se compiló `dist\ERP-ELEAM-Setup-0.2.0.exe` (24,7 MB) con Inno
   Setup y se probó en el PC de desarrollo: smoke test del flujo instalado
   (servidor, `/up`, login, base fuera de la carpeta del programa, respaldo y
   verificación), tarea programada y actualizador con reversa. Detalle en
@@ -172,9 +175,12 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
 5. Los cálculos de licencias y finiquitos son simplificados; solicitar revisión
    laboral/contable y contrastar con fuentes oficiales antes de pagos, firma o
    reportes.
-6. El cierre de liquidaciones ya bloquea el recálculo y la reapertura deja
-   trazabilidad. El cierre compara la UTM usada, pero no la UF, el sueldo mínimo
-   ni todos los topes; revisar ese control si los parámetros cambian.
+6. El cierre de liquidaciones bloquea el recálculo y la reapertura deja
+   trazabilidad. El cierre valida los parámetros vigentes del período y compara
+   UF, UTM, sueldo mínimo, topes AFP/IPS/cesantía y SIS contra la copia guardada
+   al calcular (`diferenciasDeParametros()`). Las liquidaciones anteriores a la
+   migración de `parametros_usados` tienen esos campos en `null`, por lo que no
+   se comparan: conviene recalcularlas antes de cerrar si los parámetros cambiaron.
 
 ## Próximos pasos sugeridos
 
@@ -194,6 +200,9 @@ acredita cumplimiento legal. Antes de pagar remuneraciones:
    completa con `deploy/probar-restauracion.sh` o `pg_restore`. El respaldo
    integrado ya cubre SQLite y PostgreSQL; igualmente hay que copiar el
    respaldo fuera del servidor y verificar la restauración periódicamente.
+8. Reconstruir los artefactos de `dist/` desde la etiqueta `v0.2.0` (Inno Setup
+   6.7.3 no estaba disponible al preparar esta release) y actualizar
+   `CHECKSUMS.sha256` y las notas de lanzamiento con los nuevos hashes.
 
 ## Comandos útiles
 

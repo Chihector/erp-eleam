@@ -2,6 +2,16 @@
 
 Sistema de gestión de personal, planificación de turnos, control de asistencia, vacaciones, finanzas y remuneraciones para **Establecimientos de Larga Estadía para Adultos Mayores (ELEAM)** en Chile. Los cálculos laborales son apoyo operativo y requieren validación profesional antes de usarse para pagos o documentación oficial.
 
+## 📊 Estado de la versión
+
+| | |
+| --- | --- |
+| Versión publicada | **v0.2.0** (2026-11-17) |
+| Estado | Piloto técnico / demostración — no aprobado para producción ni pagos reales |
+| Pruebas | 128 en SQLite · 129 en PostgreSQL · CI en verde |
+| Instalador | `ERP-ELEAM-Setup-0.2.0.exe` (pendiente: PC limpio y firma) |
+| Detalle | [Notas de lanzamiento v0.2.0](docs/RELEASE_NOTES_0.2.0.md) |
+
 ---
 
 ## 🚀 Stack Tecnológico
@@ -322,11 +332,11 @@ php artisan test --filter=NotificacionesDiariasTest
 php artisan test --filter=ComandosMantenimientoTest
 ```
 
-La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request, con dos jobs: **PHP 8.2 + SQLite** y **PHP 8.3 + PostgreSQL 17**. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La línea base publicada está etiquetada como `v0.1.0`. **Reverificado el 2026-11-04: 128 pruebas aprobadas, 1 omitida y 487 aserciones en SQLite; 129 pruebas y 493 aserciones en PostgreSQL 18.3 nativo en Windows** (detalle en [validación técnica](docs/VALIDACION_TECNICA_2026-11-04.md)).
+La suite completa se ejecuta con `php artisan test` y también corre en GitHub Actions en cada push o pull request, con dos jobs: **PHP 8.2 + SQLite** y **PHP 8.3 + PostgreSQL 17**. El resultado vigente y la fecha de verificación se registran en [HOJA_DE_RUTA.md](docs/HOJA_DE_RUTA.md). La versión publicada está etiquetada como **`v0.2.0`** ([notas de lanzamiento](docs/RELEASE_NOTES_0.2.0.md)). **Reverificado el 2026-11-04 y repetido el 2026-11-17: 128 pruebas aprobadas, 1 omitida y 487 aserciones en SQLite; 129 pruebas y 493 aserciones en PostgreSQL 18.3 nativo en Windows** (detalle en [validación técnica](docs/VALIDACION_TECNICA_2026-11-04.md)).
 
 Para probar el motor de producción, con PostgreSQL disponible:
 
-```bash
+```powershell
 php artisan migrate:fresh --force
 vendor/bin/phpunit -c phpunit.pgsql.xml
 ```
@@ -343,6 +353,7 @@ para pruebas; no la reutilices en desarrollo ni producción.
 Para conocer a fondo el flujo de trabajo y uso diario del sistema, consulta la **[Guía de Uso del Usuario](GUIA_DE_USO.md)**.
 
 ## 🧭 Contexto y entrega
+- [Notas de lanzamiento v0.2.0](docs/RELEASE_NOTES_0.2.0.md) — cambios, validación, hashes de artefactos y límites conocidos.
 - [Contexto del proyecto](docs/CONTEXTO_DEL_PROYECTO.md) — arquitectura, módulos, límites de uso y cómo ejecutar pruebas.
 - [Hoja de ruta y preparación para entrega](docs/HOJA_DE_RUTA.md) — estado, prioridades de cierre y criterios para demo, piloto o producción.
 - [Instalación en Windows](docs/INSTALACION_WINDOWS.md) — instalador de escritorio, uso diario, respaldos, actualización y desinstalación.
